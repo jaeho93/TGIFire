@@ -18,7 +18,8 @@
         </activity>
         <activity android:name=".SignInActivity" />
         <activity android:name=".BuildingInfoActivity" />
-        <activity android:name=".UserMainActivity"></activity>
+        <activity android:name=".UserMainActivity" />
+        <activity android:name=".AdminMainActivity"></activity>
     </application>
 
 </manifest>
