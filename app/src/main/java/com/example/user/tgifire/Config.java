@@ -5,6 +5,6 @@ public class Config {
     static final String DEVICE_ID = "ca56bd172eab42aea1e35f6f9335e8da";
 
     // MUST be consistent with "AUTH REDIRECT URL" of your application set up at the developer.artik.cloud
-    static final String REDIRECT_URI = "cloud.artik.example.hellocloud://oauth2callback";
+    static final String REDIRECT_URI = "com.example.user.tgifire://oauth2callback";
 
 }

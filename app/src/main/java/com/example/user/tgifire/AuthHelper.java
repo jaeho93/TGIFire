@@ -11,7 +11,7 @@ public class AuthHelper {
     private static final String ARTIKCLOUD_TOKEN_URI = "https://accounts.artik.cloud/token";
 
     static final String INTENT_ARTIKCLOUD_AUTHORIZATION_RESPONSE
-            = "cloud.artik.example.oauth.ARTIKCLOUD_AUTHORIZATION_RESPONSE";
+            = "com.example.user.oauth.ARTIKCLOUD_AUTHORIZATION_RESPONSE";
     static final String USED_INTENT = "USED_INTENT";
 
 
