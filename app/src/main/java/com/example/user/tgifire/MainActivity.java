@@ -3,14 +3,20 @@ package com.example.user.tgifire;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Typeface;
+import android.media.Image;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import net.openid.appauth.AuthState;
@@ -34,6 +40,25 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        /* 폰트 적용 */
+        TextView textView=(TextView)findViewById(R.id.mainText);
+        Typeface typeface=Typeface.createFromAsset(getAssets(), "Dekar.otf");
+        textView.setTypeface(typeface);
+
+        Button btn1=(Button)findViewById(R.id.buttonAdmin);
+        Typeface btn_typeface=Typeface.createFromAsset(getAssets(), "a가로수.ttf");
+        btn1.setTypeface(btn_typeface);
+        Button btn2=(Button)findViewById(R.id.buttonUser);
+        btn2.setTypeface(btn_typeface);
+
+        /* 일부 글자 구간에만 색상 적용 */
+        Spannable span;
+        span = (Spannable)textView.getText();
+        span.setSpan(new ForegroundColorSpan(0xFFFF0000), 0, 1, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+        span.setSpan(new ForegroundColorSpan(0xFFFF0000), 7, 8, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+        span.setSpan(new ForegroundColorSpan(0xFFFF0000), 14, 15, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+        span.setSpan(new ForegroundColorSpan(0xFFFF0000), 24, 25, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
 
         mAuthorizationService = new AuthorizationService(this);
         mAuthStateDAL = new AuthStateDAL(this);
