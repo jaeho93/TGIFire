@@ -3,6 +3,8 @@
     package="com.example.user.tgifire">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CALL_PHONE"/>
 
     <application
         android:allowBackup="true"
@@ -14,22 +16,21 @@
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
-                <action android:name="com.example.user.tgifire.ARTIKCLOUD_AUTHORIZATION_RESPONSE"/>
+
+                <action android:name="com.example.user.tgifire.ARTIKCLOUD_AUTHORIZATION_RESPONSE" />
             </intent-filter>
         </activity>
-
         <activity android:name=".BuildingInfoActivity" />
         <activity android:name=".UserMainActivity" />
-        <activity android:name=".AdminMainActivity"></activity>
-
-
-        <activity
-            android:name="net.openid.appauth.RedirectUriReceiverActivity">
+        <activity android:name=".AdminMainActivity" />
+        <activity android:name="net.openid.appauth.RedirectUriReceiverActivity">
             <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
 
                 <!--
                  Make sure these two intent filter fields respects "AUTH REDIRECT URL"
@@ -37,9 +38,26 @@
                  For example, if REDIRECT URL is "cloud.artik.example.oauth://oauth2callback",
                  the intent-filter fields looks like the following
                 -->
-                <data android:scheme="com.example.user.tgifire" android:host="oauth2callback"/>
+                <data
+                    android:host="oauth2callback"
+                    android:scheme="com.example.user.tgifire" />
             </intent-filter>
         </activity>
+        <activity android:name=".ReportActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.example.user.tgifire.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths"/>
+        </provider>
     </application>
 
 </manifest>
