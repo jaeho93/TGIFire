@@ -29,4 +29,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     compile 'net.openid:appauth:0.4.1'
     compile 'cloud.artik:artikcloud-java:2.0.7'
+    compile 'com.android.support:recyclerview-v7:26.1.0'
 }
