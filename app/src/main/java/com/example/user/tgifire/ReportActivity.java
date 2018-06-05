@@ -12,6 +12,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.Image;
 import android.net.Uri;
 import android.net.http.HttpResponseCache;
@@ -45,6 +46,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -153,8 +155,18 @@ public class ReportActivity extends AppCompatActivity implements View.OnClickLis
             intent.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(intent, 20);
         }else if(v == submit) {
-            if (address.getText().toString().length() != 0 && content.getText().toString().length() != 0)
+            if (address.getText().toString().length() != 0 && content.getText().toString().length() != 0) {
                 showToast("신고가 정상적으로 접수되었습니다.");
+                Intent intent = new Intent(getApplicationContext(), WebViewActivity.class);
+                BitmapDrawable d = (BitmapDrawable)((ImageView) findViewById(R.id.resultImageView)).getDrawable();
+                Bitmap b = d.getBitmap();
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                b.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                byte[] byteArray = stream.toByteArray();
+                intent.putExtra("image", byteArray);
+                intent.putExtra("address", address.getText().toString());
+                intent.putExtra("content", content.getText().toString());
+                startActivity(intent); }
             else
                 showToast("빠진 양식이 없는지 확인해주십시오.");
         }
