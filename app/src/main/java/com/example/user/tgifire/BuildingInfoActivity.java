@@ -1,5 +1,6 @@
 package com.example.user.tgifire;
 
+import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -7,6 +8,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -39,12 +42,12 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
 
         // LinearLayout으로 설정
         listview.setLayoutManager(mLayoutManager);
-        // Animation Defualt 설정
-        listview.setItemAnimator(new DefaultItemAnimator());
 
         // Adapter 생성 및 달기
         adapter = new RecyclerViewAdapter(items, this);
         listview.setAdapter(adapter);
+
+        runAnimation();
     }
 
     public boolean loadItemsFromDB() {
@@ -61,6 +64,17 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         items.add(new BuildingInfoItem(i));
 
         return true ;
+    }
+
+    private void runAnimation() {
+        Context context = listview.getContext();
+        LayoutAnimationController controller = null;
+
+        controller = AnimationUtils.loadLayoutAnimation(context, R.anim.anim_fall_down);
+
+        listview.setLayoutAnimation(controller);
+        adapter.notifyDataSetChanged();
+        listview.scheduleLayoutAnimation();
     }
 
     @Override
