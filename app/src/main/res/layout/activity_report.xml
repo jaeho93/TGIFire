@@ -80,6 +80,14 @@
         app:layout_constraintTop_toBottomOf="@id/gallery"
         android:clickable="true"/>
 
+    <TextView
+        android:id="@+id/linkToReport"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="웹페이지에서 신고하기"
+        android:textSize="15dp"
+        app:layout_constraintBottom_toTopOf="@id/submit"/>
+
     <Button
         android:id="@+id/submit"
         android:layout_width="match_parent"
