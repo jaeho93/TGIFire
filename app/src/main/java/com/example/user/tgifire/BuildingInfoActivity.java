@@ -12,20 +12,24 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 public class BuildingInfoActivity extends AppCompatActivity implements ListViewButtonAdapter.ListBtnClickListener {
+    ListView listview ;
+    ArrayList<BuildingInfoItem> items;// = new ArrayList<BuildingInfoItem>() ;
+    ListViewButtonAdapter adapter;// = new ListViewButtonAdapter(this, R.layout.item_building_info, items, this) ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_building_info);
 
+
         ListView listview ;
-        final ArrayList<BuildingInfoItem> items = new ArrayList<BuildingInfoItem>() ;
+        items = new ArrayList<BuildingInfoItem>() ;
 
         // items 로드.
         loadItemsFromDB(items);
 
         // Adapter 생성
-        final ListViewButtonAdapter adapter = new ListViewButtonAdapter(this, R.layout.item_building_info, items, this) ;
+        adapter = new ListViewButtonAdapter(this, R.layout.item_building_info, items, this) ;
 
         // 리스트뷰 참조 및 Adapter달기
         listview = (ListView) findViewById(R.id.listBuildingInfo);
@@ -103,6 +107,10 @@ public class BuildingInfoActivity extends AppCompatActivity implements ListViewB
 
     @Override
     public void onListBtnClick(int position) {
-        Toast.makeText(this, Integer.toString(position+1) + " Item is selected..", Toast.LENGTH_SHORT).show() ;
+        // 아이템 삭제
+        items.remove(position) ;
+
+        // listview 갱신.
+        adapter.notifyDataSetChanged();
     }
 }
