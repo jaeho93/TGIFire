@@ -4,6 +4,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -17,14 +19,13 @@ public class BuildingInfoActivity extends AppCompatActivity implements ListViewB
         setContentView(R.layout.activity_building_info);
 
         ListView listview ;
-        ListViewButtonAdapter adapter;
-        ArrayList<BuildingInfoItem> items = new ArrayList<BuildingInfoItem>() ;
+        final ArrayList<BuildingInfoItem> items = new ArrayList<BuildingInfoItem>() ;
 
         // items 로드.
-        loadItemsFromDB(items) ;
+        loadItemsFromDB(items);
 
         // Adapter 생성
-        adapter = new ListViewButtonAdapter(this, R.layout.item_building_info, items, this) ;
+        final ListViewButtonAdapter adapter = new ListViewButtonAdapter(this, R.layout.item_building_info, items, this) ;
 
         // 리스트뷰 참조 및 Adapter달기
         listview = (ListView) findViewById(R.id.listBuildingInfo);
@@ -36,7 +37,36 @@ public class BuildingInfoActivity extends AppCompatActivity implements ListViewB
             public void onItemClick(AdapterView parent, View v, int position, long id) {
                 // TODO : item click
             }
-        }) ;
+        });
+
+        // push button에 대한 이벤트 처리.
+        Button buttonPushItemOnHead = (Button)findViewById(R.id.buttonPushItemOnHead) ;
+        buttonPushItemOnHead.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                // 아이템 추가.
+                BuildingInfoItem item = new BuildingInfoItem() ;
+                item.setText(Integer.toString(1) + "층") ;
+                items.add(0, item);
+
+                // listview 갱신
+                adapter.notifyDataSetChanged();
+            }
+        });
+        Button buttonPushItemOnTail = (Button)findViewById(R.id.buttonPushItemOnTail) ;
+        buttonPushItemOnTail.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                int count;
+                count = adapter.getCount();
+
+                // 아이템 추가.
+                BuildingInfoItem item = new BuildingInfoItem() ;
+                item.setText(Integer.toString(count + 1) + "층") ;
+                items.add(item);
+
+                // listview 갱신
+                adapter.notifyDataSetChanged();
+            }
+        });
     }
 
     public boolean loadItemsFromDB(ArrayList<BuildingInfoItem> list) {
