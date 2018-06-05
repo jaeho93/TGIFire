@@ -53,15 +53,15 @@ public class ListViewButtonAdapter extends ArrayAdapter implements View.OnClickL
         // 아이템 내 각 위젯에 데이터 반영
         textTextView.setText(listViewItem.getText());
 
-        // button1 클릭 시 TextView(textView1)의 내용 변경.
+        // buttonEditPicture 클릭 시 TextView 의 내용 변경.
         Button button1 = (Button) convertView.findViewById(R.id.buttonEditPicture);
         button1.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                textTextView.setText(Integer.toString(pos + 1) + "번 아이템 선택.");
+                textTextView.setText(Integer.toString(pos + 1) + "끄악");
             }
         });
 
-        // button2의 TAG에 position값 지정. Adapter를 click listener로 지정.
+        // buttonDeleteFloor의 TAG에 position값 지정. Adapter를 click listener로 지정.
         Button button2 = (Button) convertView.findViewById(R.id.buttonDeleteFloor);
         button2.setTag(position);
         button2.setOnClickListener(this);
@@ -69,7 +69,7 @@ public class ListViewButtonAdapter extends ArrayAdapter implements View.OnClickL
         return convertView;
     }
 
-    // button2가 눌려졌을 때 실행되는 onClick함수.
+    // 삭제 버튼이 눌려졌을 때 실행되는 onClick함수.
     public void onClick(View v) {
         // ListBtnClickListener(MainActivity)의 onListBtnClick() 함수 호출.
         if (this.listBtnClickListener != null) {
