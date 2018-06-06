@@ -2,14 +2,21 @@ package com.example.user.tgifire;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.Image;
 import android.net.Uri;
+import android.net.http.HttpResponseCache;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
@@ -17,21 +24,51 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telephony.SmsManager;
+import android.telephony.TelephonyManager;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.text.util.Linkify;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class ReportActivity extends AppCompatActivity implements View.OnClickListener{
+
+public class ReportActivity extends AppCompatActivity implements View.OnClickListener {
 
     Button camera;
     Button gallery;
+    Button submit;
+
+    TextView reportWeb;
+    EditText address;
+    EditText content;
+
     ImageView resultImageView;
     TextView resultView;
 
@@ -57,13 +94,36 @@ public class ReportActivity extends AppCompatActivity implements View.OnClickLis
 
         camera = (Button)findViewById(R.id.camera);
         gallery = (Button)findViewById(R.id.gallery);
+        submit = (Button)findViewById(R.id.submit);
+
+        reportWeb = (TextView)findViewById(R.id.linkToReport);
+        reportWeb.setTypeface(typeface2);
+        address = (EditText)findViewById(R.id.addressEdit);
+        content = (EditText)findViewById(R.id.contentEdit);
+
         resultImageView = (ImageView)findViewById(R.id.resultImageView);
         resultView=(TextView)findViewById(R.id.resultView);
 
         camera.setOnClickListener(this);
         gallery.setOnClickListener(this);
+        submit.setOnClickListener(this);
         reqWidth = getResources().getDimensionPixelSize(R.dimen.request_image_width);
         reqHeight = getResources().getDimensionPixelSize(R.dimen.request_image_height);
+
+        Linkify.TransformFilter mTransform = new Linkify.TransformFilter() {
+            @Override
+            public String transformUrl(Matcher matcher, String s) {
+                return "http://www.119.go.kr/Center119/regist.do?certify=R";
+            }
+        };
+
+        Pattern pattern = Pattern.compile("웹페이지에서 신고하기");
+        Linkify.addLinks(reportWeb, pattern, "", null, mTransform);
+    }
+
+    private void showToast(String message){
+        Toast toast=Toast.makeText(this, message, Toast.LENGTH_SHORT);
+        toast.show();
     }
 
     @Override
@@ -94,8 +154,22 @@ public class ReportActivity extends AppCompatActivity implements View.OnClickLis
             intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
             intent.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(intent, 20);
+        }else if(v == submit) {
+            if (address.getText().toString().length() != 0 && content.getText().toString().length() != 0) {
+                showToast("신고가 정상적으로 접수되었습니다.");
+                Intent intent = new Intent(getApplicationContext(), WebViewActivity.class);
+                BitmapDrawable d = (BitmapDrawable)((ImageView) findViewById(R.id.resultImageView)).getDrawable();
+                Bitmap b = d.getBitmap();
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                b.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                byte[] byteArray = stream.toByteArray();
+                intent.putExtra("image", byteArray);
+                intent.putExtra("address", address.getText().toString());
+                intent.putExtra("content", content.getText().toString());
+                startActivity(intent); }
+            else
+                showToast("빠진 양식이 없는지 확인해주십시오.");
         }
-
     }
 
     @Override
@@ -182,5 +256,4 @@ public class ReportActivity extends AppCompatActivity implements View.OnClickLis
         cursor.close();
         return filePath;
     }
-
 }
