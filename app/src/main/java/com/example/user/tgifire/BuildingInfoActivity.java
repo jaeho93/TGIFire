@@ -6,9 +6,9 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -16,24 +16,45 @@ import android.util.Log;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
+import com.bumptech.glide.Glide;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 
 public class BuildingInfoActivity extends AppCompatActivity implements RecyclerViewAdapter.RecyclerButtonClickListener{
+    Context mContext = this;
+
     RecyclerView listview ;
     ArrayList<BuildingInfoItem> items;// = new ArrayList<BuildingInfoItem>() ;
     RecyclerViewAdapter adapter;// = new ListViewButtonAdapter(this, R.layout.item_building_info, items, this) ;
     LinearLayoutManager mLayoutManager;
+
+    FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+    DatabaseReference databaseReference = firebaseDatabase.getReference();
+    FirebaseStorage storage = FirebaseStorage.getInstance("gs://tgifire-cdf25.appspot.com/");
+    StorageReference storageReference = storage.getReference();
+
     int currentPosition;
+    int floorIndex;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,9 +62,6 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         setContentView(R.layout.activity_building_info);
 
         items = new ArrayList<BuildingInfoItem>() ;
-
-        // items 로드.
-        loadItemsFromDB();
 
         // 리스트뷰 참조
         listview = (RecyclerView) findViewById(R.id.listBuildingInfo);
@@ -57,6 +75,9 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         // Adapter 생성 및 달기
         adapter = new RecyclerViewAdapter(items, this);
         listview.setAdapter(adapter);
+
+        // items 로드.
+        loadItemsFromDB();
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(adapter));
         itemTouchHelper.attachToRecyclerView(listview);
@@ -72,21 +93,85 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                 adapter.notifyDataSetChanged();
             }
         });
+
+        Button buttonSaveBuildingInfo = (Button) findViewById(R.id.buttonSaveBuildingInfo);
+        buttonSaveBuildingInfo.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                EditText editBuildingName = (EditText) findViewById(R.id.editBuildingName);
+
+                GPSLocation GPS = new GPSLocation(mContext);
+                double GPS_X = GPS.getGPS_X();
+                double GPS_Y = GPS.getGPS_Y();
+                Building building = new Building(editBuildingName.getText().toString(),
+                        GPS.getGPS_X(), GPS.getGPS_Y(), GPSLocation.getAddress(mContext, GPS_X, GPS_Y), adapter.getItemCount());
+                databaseReference.child("BUILDING").child("bjp").setValue(building);
+
+                // 층별 사진 업로드
+                for (int i = 0; i < adapter.getItemCount(); i++) {
+                    if (items.get(i).getImageFloor() == null) continue;
+                    // Get the data from an ImageView as bytes
+                    Bitmap bitmap = items.get(i).getImageFloor();
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                    byte[] data = baos.toByteArray();
+
+                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(i + 1) + ".jpg");
+                    UploadTask uploadTask = spaceReference.putBytes(data);
+
+                    uploadTask.addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Handle unsuccessful uploads
+                            Toast.makeText(mContext, "Upload fail...", Toast.LENGTH_SHORT).show();
+                        }
+                    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            Toast.makeText(mContext, "Upload complete!", Toast.LENGTH_SHORT).show();
+                            // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
+                        }
+                    });
+                }
+            }
+        });
     }
 
     public boolean loadItemsFromDB() {
-        int i ;
+        databaseReference.child("BUILDING").child("bjp").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Building building = dataSnapshot.getValue(Building.class);
 
-        // 순서를 위한 i 값을 1로 초기화.
-        i = 0;
+                if (building == null) return;
 
-        // 아이템 생성.
-        items.add(new BuildingInfoItem(i));
-        i++;
-        items.add(new BuildingInfoItem(i));
-        i++;
-        items.add(new BuildingInfoItem(i));
+                EditText editBuildingName = (EditText) findViewById(R.id.editBuildingName);
+                editBuildingName.setText(building.buildingName);
 
+                // 층별 사진 다운로드
+                for (floorIndex = 0; floorIndex < building.floorNumber; floorIndex++) {
+                    final int index = floorIndex;
+                    items.add(new BuildingInfoItem(index));
+
+                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(index + 1) + ".jpg");
+                    final long ONE_MEGABYTE = 1024 * 1024;
+                    spaceReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                        @Override
+                        public void onSuccess(byte[] bytes) {
+                            // Data for "images/island.jpg" is returns, use this as needed
+                            //buildingInfoItem.setImageFloor(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+                            items.get(index).setImageFloor(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+                            adapter.notifyItemChanged(index);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+
+        adapter.notifyDataSetChanged();
         return true ;
     }
 
@@ -151,7 +236,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
 
             BitmapFactory.Options imgOptions=new BitmapFactory.Options();
             imgOptions.inSampleSize=inSampleSize;
-            Bitmap bitmap=BitmapFactory.decodeFile(filePath, imgOptions);
+            Bitmap bitmap = BitmapFactory.decodeFile(filePath, imgOptions);
             items.get(currentPosition).setImageFloor(bitmap);
 
             adapter.notifyDataSetChanged();
