@@ -95,17 +95,12 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
             public void onClick(View v) {
                 EditText editBuildingName = (EditText) findViewById(R.id.editBuildingName);
 
-                // 건물 이름 업로드
-                databaseReference.child("bjp").child("BUILDING").child("NAME").push().setValue(editBuildingName.getText().toString());
-                // GPS 업로드
                 GPSLocation GPS = new GPSLocation(mContext);
                 double GPS_X = GPS.getGPS_X();
                 double GPS_Y = GPS.getGPS_Y();
-                databaseReference.child("bjp").child("BUILDING").child("GPS_X").push().setValue(Double.toString(GPS_X));
-                databaseReference.child("bjp").child("BUILDING").child("GPS_Y").push().setValue(Double.toString(GPS_Y));
-                databaseReference.child("bjp").child("BUILDING").child("ADDRESS").push().setValue(GPSLocation.getAddress(mContext, GPS_X, GPS_Y));
-                // 층 개수 업로드
-                databaseReference.child("bjp").child("BUILDING").child("FLOOR_NUMBER").push().setValue(Integer.toString(adapter.getItemCount()));
+                Building building = new Building(editBuildingName.getText().toString(),
+                        GPS.getGPS_X(), GPS.getGPS_Y(), GPSLocation.getAddress(mContext, GPS_X, GPS_Y), adapter.getItemCount());
+                databaseReference.child("BUILDING").child("bjp").setValue(building);
 
                 // 층별 사진 업로드
                 for (int i = 0; i < adapter.getItemCount(); i++) {
@@ -139,6 +134,21 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
 
     public boolean loadItemsFromDB() {
         int i ;
+/*
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    snapshot.getValue().equals("FF");
+                    Log.d("LOOOOOO", snapshot.getValue().toString());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });*/
 
         // 순서를 위한 i 값을 1로 초기화.
         i = 0;
