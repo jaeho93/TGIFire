@@ -1,7 +1,9 @@
 package com.example.user.tgifire;
 
 import android.content.Context;
+import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +17,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
 
     // 버튼 클릭 이벤트를 위한 Listener 인터페이스 정의.
     public interface RecyclerButtonClickListener {
-        void onRecyclerButtonClick(int position);
+        void onRecyclerButtonClick(String type, int position);
     }
 
     // 생성자로부터 전달된 ListBtnClickListener  저장.
@@ -39,8 +41,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
     @Override
     public void onBindViewHolder(RecyclerViewHolder holder, final int position) {
         // 해당 position 에 해당하는 데이터 결합
-        //holder.textFloor.setText(Integer.toString(mItems.get(position + 1).getIndex()) + "층");
+        mItems.get(position).setIndex(position);
         holder.textFloor.setText(mItems.get(position).getText());
+        holder.imageFloor.setImageBitmap(mItems.get(position).getImageFloor());
 
         // 이벤트처리 : 생성된 List 중 선택된 목록번호를 Toast로 출력
         holder.itemView.setOnClickListener(new View.OnClickListener() {
@@ -50,7 +53,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
             }
         });
 
-        holder.buttonDeleteFloor.setTag(position);
+        holder.buttonEditPicture.setTag(position);
+        holder.buttonEditPicture.setOnClickListener(this);
+        holder.buttonDeleteFloor.setTag(position + 1000);
         holder.buttonDeleteFloor.setOnClickListener(this);
     }
 
@@ -58,14 +63,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
     @Override
     public int getItemCount() {
         return mItems.size();
-    }
-
-    // buttonDeleteFloor가 눌려졌을 때 실행되는 onClick함수.
-    public void onClick(View v) {
-        // ListBtnClickListener(MainActivity)의 onListBtnClick() 함수 호출.
-        if (this.recyclerButtonClickListener != null) {
-            this.recyclerButtonClickListener.onRecyclerButtonClick((int) v.getTag());
-        }
     }
 
     @Override
@@ -79,12 +76,53 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
         mItems.add(toPosition, fromItem);
 
         notifyItemMoved(fromPosition, toPosition);
+
+        new Handler().postDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                for (int i = 0; i < getItemCount(); i++) {
+                    mItems.get(i).setIndex(i);
+                }
+                notifyDataSetChanged();
+            }
+        }, 500);
+
         return true;
     }
 
     @Override
     public void onItemRemove(int position) {
         mItems.remove(position);
+        for (int i = 0; i < getItemCount(); i++) {
+            mItems.get(i).setIndex(i);
+        }
         notifyItemRemoved(position);
+
+        new Handler().postDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                for (int i = 0; i < getItemCount(); i++) {
+                    mItems.get(i).setIndex(i);
+                }
+                notifyDataSetChanged();
+            }
+        }, 500);
+    }
+
+    // buttonDeleteFloor가 눌려졌을 때 실행되는 onClick함수.
+    public void onClick(View v) {
+        // ListBtnClickListener(MainActivity)의 onListBtnClick() 함수 호출.
+        if (this.recyclerButtonClickListener != null) {
+            if ((int) v.getTag() < 1000) {
+                this.recyclerButtonClickListener.onRecyclerButtonClick("Edit", (int) v.getTag());
+            }
+            else {
+                this.recyclerButtonClickListener.onRecyclerButtonClick("Delete", (int) v.getTag() - 1000);
+            }
+        }
     }
 }

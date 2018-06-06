@@ -1,6 +1,11 @@
 package com.example.user.tgifire;
 
 import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -14,9 +19,13 @@ import android.view.animation.LayoutAnimationController;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 public class BuildingInfoActivity extends AppCompatActivity implements RecyclerViewAdapter.RecyclerButtonClickListener{
@@ -24,6 +33,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
     ArrayList<BuildingInfoItem> items;// = new ArrayList<BuildingInfoItem>() ;
     RecyclerViewAdapter adapter;// = new ListViewButtonAdapter(this, R.layout.item_building_info, items, this) ;
     LinearLayoutManager mLayoutManager;
+    int currentPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,14 +102,59 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
     }
 
     @Override
-    public void onRecyclerButtonClick(int position) {
-        Toast.makeText(this, Integer.toString(position+1) + " Item is selected..", Toast.LENGTH_SHORT).show();
-        items.remove(position);
+    public void onRecyclerButtonClick(String type, int position) {
+        currentPosition = position;
 
-        for (int i = 0; i < adapter.getItemCount(); i++) {
-            items.set(i, new BuildingInfoItem(i));
+        if (type == "Edit") {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setType(MediaStore.Images.Media.CONTENT_TYPE);
+            intent.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(intent, 20);
         }
+        if (type == "Delete") {
+            Toast.makeText(this, Integer.toString(position + 1) + " Item is selected..", Toast.LENGTH_SHORT).show();
+            items.remove(position);
 
-        adapter.notifyDataSetChanged();
+            for (int i = 0; i < adapter.getItemCount(); i++) {
+                items.get(i).setIndex(i);
+            }
+
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 20 && resultCode == RESULT_OK) {
+            String[] projection = {MediaStore.Images.Media.DATA};
+            Cursor cursor = getContentResolver().query(data.getData(), projection, null, null, null);
+            cursor.moveToFirst();
+            String filePath = cursor.getString(0);
+            insertImageView(filePath);
+        }
+    }
+
+    private void insertImageView(String filePath) {
+        if (!filePath.equals("")) {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            try {
+                InputStream in = new FileInputStream(filePath);
+                BitmapFactory.decodeStream(in, null, options);
+                in.close();
+                in = null;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            int inSampleSize = 1;
+
+            BitmapFactory.Options imgOptions=new BitmapFactory.Options();
+            imgOptions.inSampleSize=inSampleSize;
+            Bitmap bitmap=BitmapFactory.decodeFile(filePath, imgOptions);
+            items.get(currentPosition).setImageFloor(bitmap);
+
+            adapter.notifyDataSetChanged();
+        }
     }
 }
