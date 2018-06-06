@@ -48,6 +48,16 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         listview.setAdapter(adapter);
 
         runAnimation();
+
+        Button buttonAddFloor = (Button) findViewById(R.id.buttonAddFloor);
+        buttonAddFloor.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                int n = adapter.getItemCount();
+                items.add(n, new BuildingInfoItem(n));
+
+                adapter.notifyDataSetChanged();
+            }
+        });
     }
 
     public boolean loadItemsFromDB() {
@@ -80,7 +90,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
     @Override
     public void onRecyclerButtonClick(int position) {
         Toast.makeText(this, Integer.toString(position+1) + " Item is selected..", Toast.LENGTH_SHORT).show();
-        items.add(position + 1, new BuildingInfoItem(position + 1));
+        items.remove(position);
 
         for (int i = 0; i < adapter.getItemCount(); i++) {
             items.set(i, new BuildingInfoItem(i));

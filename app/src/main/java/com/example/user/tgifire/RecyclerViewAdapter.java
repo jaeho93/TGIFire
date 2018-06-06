@@ -48,8 +48,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
             }
         });
 
-        holder.buttonAddFloor.setTag(position);
-        holder.buttonAddFloor.setOnClickListener(this);
+        holder.buttonDeleteFloor.setTag(position);
+        holder.buttonDeleteFloor.setOnClickListener(this);
     }
     // 필수 오버라이드 : 데이터 갯수 반환
     @Override
@@ -57,7 +57,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
         return mItems.size();
     }
 
-    // button2가 눌려졌을 때 실행되는 onClick함수.
+    // buttonDeleteFloor가 눌려졌을 때 실행되는 onClick함수.
     public void onClick(View v) {
         // ListBtnClickListener(MainActivity)의 onListBtnClick() 함수 호출.
         if (this.recyclerButtonClickListener != null) {
