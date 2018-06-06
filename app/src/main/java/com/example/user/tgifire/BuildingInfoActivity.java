@@ -6,33 +6,46 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ListView;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 
 public class BuildingInfoActivity extends AppCompatActivity implements RecyclerViewAdapter.RecyclerButtonClickListener{
+    Context mContext = this;
+
     RecyclerView listview ;
     ArrayList<BuildingInfoItem> items;// = new ArrayList<BuildingInfoItem>() ;
     RecyclerViewAdapter adapter;// = new ListViewButtonAdapter(this, R.layout.item_building_info, items, this) ;
     LinearLayoutManager mLayoutManager;
+
+    FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+    DatabaseReference databaseReference = firebaseDatabase.getReference();
+    FirebaseStorage storage = FirebaseStorage.getInstance("gs://tgifire-cdf25.appspot.com/");
+    StorageReference storageReference = storage.getReference();
+
     int currentPosition;
 
     @Override
@@ -70,6 +83,51 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                 items.add(n, new BuildingInfoItem(n));
 
                 adapter.notifyDataSetChanged();
+            }
+        });
+
+        Button buttonSaveBuildingInfo = (Button) findViewById(R.id.buttonSaveBuildingInfo);
+        buttonSaveBuildingInfo.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                EditText editBuildingName = (EditText) findViewById(R.id.editBuildingName);
+
+                // 건물 사진 업로드
+                databaseReference.child("bjp").child("BUILDING").child("NAME").push().setValue(editBuildingName.getText().toString());
+                // GPS 업로드
+                GPSLocation GPS = new GPSLocation(mContext);
+                double GPS_X = GPS.getGPS_X();
+                double GPS_Y = GPS.getGPS_Y();
+                databaseReference.child("bjp").child("BUILDING").child("GPS_X").push().setValue(Double.toString(GPS_X));
+                databaseReference.child("bjp").child("BUILDING").child("GPS_Y").push().setValue(Double.toString(GPS_Y));
+                databaseReference.child("bjp").child("BUILDING").child("ADDRESS").push().setValue(GPSLocation.getAddress(mContext, GPS_X, GPS_Y));
+                // 층 개수 업로드
+                databaseReference.child("bjp").child("BUILDING").child("FLOOR_NUMBER").push().setValue(Integer.toString(adapter.getItemCount()));
+                // 층별 사진 업로드
+                for (int i = 0; i < adapter.getItemCount(); i++) {
+                    if (items.get(i).getImageFloor() == null) continue;
+                    // Get the data from an ImageView as bytes
+                    Bitmap bitmap = items.get(i).getImageFloor();
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                    byte[] data = baos.toByteArray();
+
+                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(i + 1) + ".jpg");
+                    UploadTask uploadTask = spaceReference.putBytes(data);
+
+                    uploadTask.addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Handle unsuccessful uploads
+                            Toast.makeText(mContext, "Upload fail...", Toast.LENGTH_SHORT).show();
+                        }
+                    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            Toast.makeText(mContext, "Upload complete!", Toast.LENGTH_SHORT).show();
+                            // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
+                        }
+                    });
+                }
             }
         });
     }

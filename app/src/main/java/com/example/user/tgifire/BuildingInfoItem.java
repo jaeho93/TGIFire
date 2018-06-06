@@ -6,7 +6,7 @@ import android.util.Log;
 public class BuildingInfoItem {
     private int index;
     private String textFloor;
-    private Bitmap imageFloor;
+    private Bitmap imageFloor = null;
 
     public BuildingInfoItem(int index) {
         this.index = index;
