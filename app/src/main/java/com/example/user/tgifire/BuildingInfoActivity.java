@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.AnimationUtils;
@@ -46,6 +47,9 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         // Adapter 생성 및 달기
         adapter = new RecyclerViewAdapter(items, this);
         listview.setAdapter(adapter);
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(adapter));
+        itemTouchHelper.attachToRecyclerView(listview);
 
         runAnimation();
 
