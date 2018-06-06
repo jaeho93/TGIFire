@@ -18,9 +18,12 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -51,6 +54,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
     StorageReference storageReference = storage.getReference();
 
     int currentPosition;
+    int floorIndex;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,9 +62,6 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         setContentView(R.layout.activity_building_info);
 
         items = new ArrayList<BuildingInfoItem>() ;
-
-        // items 로드.
-        loadItemsFromDB();
 
         // 리스트뷰 참조
         listview = (RecyclerView) findViewById(R.id.listBuildingInfo);
@@ -74,6 +75,9 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         // Adapter 생성 및 달기
         adapter = new RecyclerViewAdapter(items, this);
         listview.setAdapter(adapter);
+
+        // items 로드.
+        loadItemsFromDB();
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(adapter));
         itemTouchHelper.attachToRecyclerView(listview);
@@ -133,33 +137,41 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
     }
 
     public boolean loadItemsFromDB() {
-        int i ;
-/*
-        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+        databaseReference.child("BUILDING").child("bjp").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    snapshot.getValue().equals("FF");
-                    Log.d("LOOOOOO", snapshot.getValue().toString());
+                Building building = dataSnapshot.getValue(Building.class);
+
+                if (building == null) return;
+
+                EditText editBuildingName = (EditText) findViewById(R.id.editBuildingName);
+                editBuildingName.setText(building.buildingName);
+
+                // 층별 사진 다운로드
+                for (floorIndex = 0; floorIndex < building.floorNumber; floorIndex++) {
+                    final int index = floorIndex;
+                    items.add(new BuildingInfoItem(index));
+
+                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(index + 1) + ".jpg");
+                    final long ONE_MEGABYTE = 1024 * 1024;
+                    spaceReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                        @Override
+                        public void onSuccess(byte[] bytes) {
+                            // Data for "images/island.jpg" is returns, use this as needed
+                            //buildingInfoItem.setImageFloor(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+                            items.get(index).setImageFloor(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
+                            adapter.notifyItemChanged(index);
+                        }
+                    });
                 }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
             }
-        });*/
+        });
 
-        // 순서를 위한 i 값을 1로 초기화.
-        i = 0;
-
-        // 아이템 생성.
-        items.add(new BuildingInfoItem(i));
-        i++;
-        items.add(new BuildingInfoItem(i));
-        i++;
-        items.add(new BuildingInfoItem(i));
-
+        adapter.notifyDataSetChanged();
         return true ;
     }
 
@@ -224,7 +236,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
 
             BitmapFactory.Options imgOptions=new BitmapFactory.Options();
             imgOptions.inSampleSize=inSampleSize;
-            Bitmap bitmap=BitmapFactory.decodeFile(filePath, imgOptions);
+            Bitmap bitmap = BitmapFactory.decodeFile(filePath, imgOptions);
             items.get(currentPosition).setImageFloor(bitmap);
 
             adapter.notifyDataSetChanged();
