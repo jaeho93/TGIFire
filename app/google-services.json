@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "155954431850",
+    "firebase_url": "https://tgifire-cdf25.firebaseio.com",
+    "project_id": "tgifire-cdf25",
+    "storage_bucket": "tgifire-cdf25.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:155954431850:android:1cceed6acc2a390d",
+        "android_client_info": {
+          "package_name": "com.example.user.tgifire"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "155954431850-sg9b609ppov4ohte2a473is0ce6blqbf.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "155954431850-sg9b609ppov4ohte2a473is0ce6blqbf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBeWbi9H3EuJLtbBdev-DlFxdtoq-E6rFA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
