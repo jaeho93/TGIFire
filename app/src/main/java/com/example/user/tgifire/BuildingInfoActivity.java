@@ -90,6 +90,8 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                 int n = adapter.getItemCount();
                 items.add(n, new BuildingInfoItem(n));
 
+                listview.scrollToPosition(n);
+
                 adapter.notifyDataSetChanged();
             }
         });

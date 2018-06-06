@@ -46,6 +46,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
         if (mItems.get(position).getImageFloor() != null) {
             holder.imageFloor.setImageBitmap(mItems.get(position).getImageFloor());
         }
+        else {
+            holder.imageFloor.setImageBitmap(null);
+        }
 
         // 이벤트처리 : 생성된 List 중 선택된 목록번호를 Toast로 출력
         holder.itemView.setOnClickListener(new View.OnClickListener() {
