@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
@@ -22,8 +23,11 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -91,7 +95,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
             public void onClick(View v) {
                 EditText editBuildingName = (EditText) findViewById(R.id.editBuildingName);
 
-                // 건물 사진 업로드
+                // 건물 이름 업로드
                 databaseReference.child("bjp").child("BUILDING").child("NAME").push().setValue(editBuildingName.getText().toString());
                 // GPS 업로드
                 GPSLocation GPS = new GPSLocation(mContext);
@@ -102,6 +106,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                 databaseReference.child("bjp").child("BUILDING").child("ADDRESS").push().setValue(GPSLocation.getAddress(mContext, GPS_X, GPS_Y));
                 // 층 개수 업로드
                 databaseReference.child("bjp").child("BUILDING").child("FLOOR_NUMBER").push().setValue(Integer.toString(adapter.getItemCount()));
+
                 // 층별 사진 업로드
                 for (int i = 0; i < adapter.getItemCount(); i++) {
                     if (items.get(i).getImageFloor() == null) continue;
