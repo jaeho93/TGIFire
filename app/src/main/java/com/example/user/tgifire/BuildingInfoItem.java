@@ -14,8 +14,10 @@ public class BuildingInfoItem {
     }
 
     public void setText(String text) { this.textFloor = text; }
-    public void setIndex(int index) {
+    public void setIndex(int index)
+    {
         this.index = index;
+        this.textFloor = Integer.toString(index + 1) + "층";
     }
     public void setImageFloor(Bitmap bitmap) { imageFloor = bitmap; }
 

@@ -116,7 +116,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
             items.remove(position);
 
             for (int i = 0; i < adapter.getItemCount(); i++) {
-                items.set(i, new BuildingInfoItem(i));
+                items.get(i).setIndex(i);
             }
 
             adapter.notifyDataSetChanged();
@@ -147,7 +147,6 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                 e.printStackTrace();
             }
 
-            final int width = options.outWidth;
             int inSampleSize = 1;
 
             BitmapFactory.Options imgOptions=new BitmapFactory.Options();

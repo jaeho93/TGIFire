@@ -1,6 +1,7 @@
 package com.example.user.tgifire;
 
 import android.content.Context;
+import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -40,6 +41,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
     @Override
     public void onBindViewHolder(RecyclerViewHolder holder, final int position) {
         // 해당 position 에 해당하는 데이터 결합
+        mItems.get(position).setIndex(position);
         holder.textFloor.setText(mItems.get(position).getText());
         holder.imageFloor.setImageBitmap(mItems.get(position).getImageFloor());
 
@@ -74,13 +76,41 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
         mItems.add(toPosition, fromItem);
 
         notifyItemMoved(fromPosition, toPosition);
+
+        new Handler().postDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                for (int i = 0; i < getItemCount(); i++) {
+                    mItems.get(i).setIndex(i);
+                }
+                notifyDataSetChanged();
+            }
+        }, 500);
+
         return true;
     }
 
     @Override
     public void onItemRemove(int position) {
         mItems.remove(position);
+        for (int i = 0; i < getItemCount(); i++) {
+            mItems.get(i).setIndex(i);
+        }
         notifyItemRemoved(position);
+
+        new Handler().postDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                for (int i = 0; i < getItemCount(); i++) {
+                    mItems.get(i).setIndex(i);
+                }
+                notifyDataSetChanged();
+            }
+        }, 500);
     }
 
     // buttonDeleteFloor가 눌려졌을 때 실행되는 onClick함수.
