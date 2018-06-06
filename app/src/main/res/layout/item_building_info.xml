@@ -33,15 +33,8 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:orientation="horizontal">
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:text="등록된 사진이 없습니다."
-                    android:id="@+id/textNoPicture"
-                    android:textSize="16dp"
-                    android:textColor="#000000"
-                    android:gravity="center"/>
                 <ImageView
+                    android:id="@+id/imageFloor"
                     android:layout_width="match_parent"
                     android:layout_height="110dp"
                     android:src="@drawable/empty"/>
