@@ -177,8 +177,6 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                     spaceReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
                         @Override
                         public void onSuccess(byte[] bytes) {
-                            // Data for "images/island.jpg" is returns, use this as needed
-                            //buildingInfoItem.setImageFloor(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
                             items.get(index).setImageFloor(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
                             downloadCount++;
                             if (downloadCount == building.floorNumber) {
