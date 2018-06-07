@@ -43,11 +43,16 @@ import java.util.ArrayList;
 public class BuildingInfoActivity extends AppCompatActivity implements RecyclerViewAdapter.RecyclerButtonClickListener{
     Context mContext = this;
 
+    // 빌딩 정보
+    Building building = null;
+
+    // 리스트 관련
     RecyclerView listview ;
     ArrayList<BuildingInfoItem> items;// = new ArrayList<BuildingInfoItem>() ;
     RecyclerViewAdapter adapter;// = new ListViewButtonAdapter(this, R.layout.item_building_info, items, this) ;
     LinearLayoutManager mLayoutManager;
 
+    // DB 관련
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     DatabaseReference databaseReference = firebaseDatabase.getReference();
     FirebaseStorage storage = FirebaseStorage.getInstance("gs://tgifire-cdf25.appspot.com/");
@@ -55,6 +60,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
 
     int currentPosition;
     int floorIndex;
+    int uploadCount, downloadCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,8 +88,6 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(adapter));
         itemTouchHelper.attachToRecyclerView(listview);
 
-        runAnimation();
-
         Button buttonAddFloor = (Button) findViewById(R.id.buttonAddFloor);
         buttonAddFloor.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
@@ -96,28 +100,29 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
             }
         });
 
+        // 확인 버튼 클릭
         Button buttonSaveBuildingInfo = (Button) findViewById(R.id.buttonSaveBuildingInfo);
         buttonSaveBuildingInfo.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
+                // 빌딩 정보 업로드
                 EditText editBuildingName = (EditText) findViewById(R.id.editBuildingName);
 
-                GPSLocation GPS = new GPSLocation(mContext);
-                double GPS_X = GPS.getGPS_X();
-                double GPS_Y = GPS.getGPS_Y();
-                Building building = new Building(editBuildingName.getText().toString(),
-                        GPS.getGPS_X(), GPS.getGPS_Y(), GPSLocation.getAddress(mContext, GPS_X, GPS_Y), adapter.getItemCount());
+                building.buildingName = editBuildingName.getText().toString();
+                building.floorNumber = adapter.getItemCount();
+
                 databaseReference.child("BUILDING").child("bjp").setValue(building);
 
                 // 층별 사진 업로드
+                uploadCount = 0;
                 for (int i = 0; i < adapter.getItemCount(); i++) {
                     if (items.get(i).getImageFloor() == null) continue;
                     // Get the data from an ImageView as bytes
                     Bitmap bitmap = items.get(i).getImageFloor();
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
                     byte[] data = baos.toByteArray();
 
-                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(i + 1) + ".jpg");
+                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(i + 1) + ".png");
                     UploadTask uploadTask = spaceReference.putBytes(data);
 
                     uploadTask.addOnFailureListener(new OnFailureListener() {
@@ -129,8 +134,12 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                     }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            Toast.makeText(mContext, "Upload complete!", Toast.LENGTH_SHORT).show();
-                            // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
+                            uploadCount++;
+                            // 업로드 완료 시 AdminActivity로 이동
+                            if (uploadCount == adapter.getItemCount()) {
+                                Intent AdminMainActivityIntent = new Intent(mContext, AdminMainActivity.class);
+                                startActivity(AdminMainActivityIntent);
+                            }
                         }
                     });
                 }
@@ -142,19 +151,27 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         databaseReference.child("BUILDING").child("bjp").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Building building = dataSnapshot.getValue(Building.class);
+                building = dataSnapshot.getValue(Building.class);
 
-                if (building == null) return;
+                if (building == null) {
+                    GPSLocation GPS = new GPSLocation(mContext);
+                    double GPS_X = GPS.getGPS_X();
+                    double GPS_Y = GPS.getGPS_Y();
+                    building = new Building("",
+                            GPS.getGPS_X(), GPS.getGPS_Y(), GPSLocation.getAddress(mContext, GPS_X, GPS_Y), 0, new ArrayList<Building.Node>());
+                    return;
+                }
 
                 EditText editBuildingName = (EditText) findViewById(R.id.editBuildingName);
                 editBuildingName.setText(building.buildingName);
 
                 // 층별 사진 다운로드
+                downloadCount = 0;
                 for (floorIndex = 0; floorIndex < building.floorNumber; floorIndex++) {
                     final int index = floorIndex;
                     items.add(new BuildingInfoItem(index));
 
-                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(index + 1) + ".jpg");
+                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(index + 1) + ".png");
                     final long ONE_MEGABYTE = 1024 * 1024;
                     spaceReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
                         @Override
@@ -162,7 +179,10 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                             // Data for "images/island.jpg" is returns, use this as needed
                             //buildingInfoItem.setImageFloor(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
                             items.get(index).setImageFloor(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
-                            adapter.notifyItemChanged(index);
+                            downloadCount++;
+                            if (downloadCount == building.floorNumber) {
+                                runAnimation();
+                            }
                         }
                     });
                 }
