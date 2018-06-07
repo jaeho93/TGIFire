@@ -1,8 +1,9 @@
 package com.example.user.tgifire;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Building {
+public class Building implements Serializable{
 
     public String buildingName;
     public double GPS_X;

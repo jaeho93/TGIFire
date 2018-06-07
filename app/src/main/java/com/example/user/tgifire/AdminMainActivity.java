@@ -1,5 +1,6 @@
 package com.example.user.tgifire;
 
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.widget.Toast;
 
 public class AdminMainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+    Building building;
     private DrawerLayout drawer;
 
     @Override
@@ -21,6 +23,9 @@ public class AdminMainActivity extends AppCompatActivity implements NavigationVi
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_admin_main);
+
+        Intent intent = getIntent();
+        building = (Building) intent.getSerializableExtra("building");
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
