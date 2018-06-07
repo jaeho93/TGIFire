@@ -138,6 +138,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                             // 업로드 완료 시 AdminActivity로 이동
                             if (uploadCount == adapter.getItemCount()) {
                                 Intent AdminMainActivityIntent = new Intent(mContext, AdminMainActivity.class);
+                                AdminMainActivityIntent.putExtra("building", building);
                                 startActivity(AdminMainActivityIntent);
                             }
                         }
