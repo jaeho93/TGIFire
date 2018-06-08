@@ -76,6 +76,8 @@ public class ReportActivity extends AppCompatActivity implements View.OnClickLis
     int reqWidth;
     int reqHeight;
 
+    String current_address;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,6 +105,11 @@ public class ReportActivity extends AppCompatActivity implements View.OnClickLis
 
         resultImageView = (ImageView)findViewById(R.id.resultImageView);
         resultView=(TextView)findViewById(R.id.resultView);
+
+        Intent addressIntent = new Intent(this.getIntent());
+        current_address = addressIntent.getStringExtra("address");
+        address.setText(current_address);
+
 
         camera.setOnClickListener(this);
         gallery.setOnClickListener(this);
