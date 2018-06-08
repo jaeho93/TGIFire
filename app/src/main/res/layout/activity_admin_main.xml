@@ -16,14 +16,20 @@
         android:background="#FFFFFF"
         android:id="@+id/drawer_menulist" />
 
-    <Button
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#00ff0000"
-        android:drawableTop="@drawable/plus"
-        android:scaleType="centerInside"
-        android:onClick="onButtonClick"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"/>
+        android:gravity="bottom|right">
 
+        <Button
+            android:id="@+id/btn_start"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="#00ff0000"
+            android:drawableTop="@drawable/plus"
+            android:onClick="onButtonClick"
+            android:padding="0sp"
+            android:scaleType="centerCrop" />
+    </LinearLayout>
 </android.support.v4.widget.DrawerLayout>
