@@ -16,5 +16,14 @@
         android:background="#FFFFFF"
         android:id="@+id/drawer_menulist" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#00ff0000"
+        android:drawableTop="@drawable/plus"
+        android:scaleType="centerInside"
+        android:onClick="onButtonClick"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"/>
 
 </android.support.v4.widget.DrawerLayout>

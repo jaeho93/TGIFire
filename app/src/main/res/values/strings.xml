@@ -3,4 +3,10 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="add_node">센서 노드 이름</string>
+    <string name="add_node_complete">노드 추가</string>
+    <string name="node_name">새 노드 이름</string>
+    <string name="success_node_msg">노드 추가 완료</string>
+    <string name="error_node_msg">노드 이름을 입력하세요.</string>
+    <string name="add_node_toast">센서의 위치를 선택해 주세요.</string>
 </resources>

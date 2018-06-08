@@ -3,6 +3,7 @@ package com.example.user.tgifire;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -13,9 +14,12 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -32,10 +36,11 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
         setContentView(R.layout.activity_admin_main);
 
         Intent intent = getIntent();
-        building = (Building) intent.getSerializableExtra("building");
+        //building = (Building) intent.getSerializableExtra("building");
 
-        String[] items = new String[building.floorNumber];
-        for (int i = 0; i < building.floorNumber; i++) {
+        //String[] items = new String[building.floorNumber];
+        String[] items = new String[4];
+        for (int i = 0; i < 4; i++) {
             items[i] = Integer.toString(i + 1) + "층";
         }
 
@@ -70,5 +75,61 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
         } else {
             super.onBackPressed();
         }
+    }
+    protected class MyView extends View {
+
+        public MyView(Context context) {
+            super(context);
+            // TODO Auto-generated constructor stub
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            // TODO Auto-generated method stub
+            super.onTouchEvent(event);
+
+            if(event.getAction() == MotionEvent.ACTION_DOWN ){
+
+                float x = event.getX();
+                float y = event.getY();
+
+                String msg = "노드 위치 : " +x+" / " +y;
+
+                Toast. makeText(AdminMainActivity. this, msg, Toast.LENGTH_SHORT ).show();
+                return true;
+            }
+            AlertDialog.Builder mBuilder = new AlertDialog.Builder(AdminMainActivity.this);
+            View mView = getLayoutInflater().inflate(R.layout.add_node, null);
+            final EditText newNode = (EditText) mView.findViewById(R.id.new_node);
+            Button mNode = (Button) mView.findViewById(R.id.btnNode);
+
+            mBuilder.setView(mView);
+            final AlertDialog dialog = mBuilder.create();
+            dialog.show();
+            mNode.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if(!newNode.getText().toString().isEmpty()){
+                        Toast.makeText(AdminMainActivity.this,
+                                R.string.success_node_msg,
+                                Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(getApplicationContext(),AdminMainActivity.class);
+                        startActivityForResult(intent, 101);
+                        dialog.dismiss();
+                    }else{
+                        Toast.makeText(AdminMainActivity.this,
+                                R.string.error_node_msg,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+            return true;
+        }
+    }
+
+    public void onButtonClick(View v){
+        Toast.makeText(this, getString(R.string.add_node_toast), Toast.LENGTH_LONG).show();
+        View view = new AdminMainActivity.MyView( this);
+        setContentView(view);
     }
 }
