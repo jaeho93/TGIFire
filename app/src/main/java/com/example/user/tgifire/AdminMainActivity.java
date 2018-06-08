@@ -103,7 +103,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             }
             AlertDialog.Builder mBuilder = new AlertDialog.Builder(AdminMainActivity.this);
             View mView = getLayoutInflater().inflate(R.layout.add_node, null);
-            final EditText nodeName = (EditText) mView.findViewById(R.id.editNodeName);
+            final EditText nodeName = (EditText) mView.findViewById(R.id.editNewNodeName);
             Button mNode = (Button) mView.findViewById(R.id.btnNode);
 
             mBuilder.setView(mView);
@@ -151,17 +151,82 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
 
         RelativeLayout.LayoutParams lp;
 
+        // 노드 추가 버튼
+        Button plusButton = new Button(this); //버튼을 선언
+
+        lp = new RelativeLayout.LayoutParams(120, 120);
+        lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        lp.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        lp.rightMargin = 50;
+        lp.bottomMargin = 50;
+        plusButton.setLayoutParams(lp);
+        plusButton.setAlpha(0.5f);
+        plusButton.setBackgroundResource(R.drawable.plus); //버튼 이미지를 지정(int)
+        plusButton.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                Toast.makeText(mContext, getString(R.string.add_node_toast), Toast.LENGTH_LONG).show();
+                View view = new AdminMainActivity.MyView( mContext);
+                view.setAlpha(0.5f);
+                view.setBackgroundDrawable(mainView.getBackground());
+                setContentView(view);
+            }
+        });
+        mainView.addView(plusButton);
+
+        // 노드들
         for (int i = 0; i < Building.getInstance().nodes.size(); i++) {
             if (Building.getInstance().nodes.get(i).floor == currentFloor) {
                 Button newNode = new Button(this); //버튼을 선언
 
                 lp = new RelativeLayout.LayoutParams(120, 120);
-                lp.leftMargin = Building.getInstance().nodes.get(i).x;
-                lp.topMargin = Building.getInstance().nodes.get(i).y;
+                lp.leftMargin = Building.getInstance().nodes.get(i).x - 60;
+                lp.topMargin = Building.getInstance().nodes.get(i).y - 60;
                 newNode.setLayoutParams(lp);
                 newNode.setAlpha(0.75f);
-
                 newNode.setBackgroundResource(R.drawable.node_green); //버튼 이미지를 지정(int)
+                newNode.setTag(i);
+
+                newNode.setOnClickListener(new Button.OnClickListener() {
+                    public void onClick(View v) {
+                        AlertDialog.Builder mBuilder = new AlertDialog.Builder(AdminMainActivity.this);
+                        View mView = getLayoutInflater().inflate(R.layout.node_info, null);
+                        final EditText nodeName = (EditText) mView.findViewById(R.id.editNodeName);
+                        Button buttonRemoveNode = (Button) mView.findViewById(R.id.buttonRemoveNode);
+                        buttonRemoveNode.setTag((int) v.getTag());
+                        Button buttonNodeExit = (Button) mView.findViewById(R.id.buttonNodeExit);
+                        buttonNodeExit.setTag((int) v.getTag());
+
+                        nodeName.setText(Building.getInstance().nodes.get((int) v.getTag()).name);
+
+                        mBuilder.setView(mView);
+                        final AlertDialog dialog = mBuilder.create();
+                        dialog.show();
+
+                        buttonRemoveNode.setOnClickListener(new Button.OnClickListener() {
+                            public void onClick(View v) {
+                                Building.getInstance().nodes.remove((int) v.getTag());
+                                // DB에 업로드
+                                databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
+
+                                dialog.dismiss();
+
+                                Intent intent = new Intent(mContext, AdminMainActivity.class);
+                                intent.putExtra("currentFloor", currentFloor);
+                                startActivity(intent);
+                            }
+                        });
+                        buttonNodeExit.setOnClickListener(new Button.OnClickListener() {
+                            public void onClick(View v) {
+                                Building.getInstance().nodes.get((int) v.getTag()).name = nodeName.getText().toString();
+                                // DB에 업로드
+                                databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
+
+                                dialog.dismiss();
+                            }
+                        });
+                    }
+                });
+
                 mainView.addView(newNode); //지정된 뷰에 셋팅완료된 Button을 추가
             }
         }
