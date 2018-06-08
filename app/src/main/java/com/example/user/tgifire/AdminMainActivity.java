@@ -3,6 +3,7 @@ package com.example.user.tgifire;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +11,7 @@ import android.os.Bundle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.LinearLayoutCompat;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -25,6 +27,11 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.GridLayout.LayoutParams;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.ArrayList;
+
 public class AdminMainActivity extends AppCompatActivity {//implements NavigationView.OnNavigationItemSelectedListener {
     Context mContext = this;
 
@@ -33,23 +40,26 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
     ListView listview;
     RelativeLayout mainView;
 
+    // DB 관련
+    FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
+    DatabaseReference databaseReference = firebaseDatabase.getReference();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_admin_main);
 
-        Intent intent = getIntent();
-
         String[] items = new String[Building.getInstance().floorNumber];
         for (int i = 0; i < Building.getInstance().floorNumber; i++) {
             items[i] = Integer.toString(i + 1) + "층";
         }
 
-        currentFloor = 0;
+        Intent intent = getIntent();
+        currentFloor = intent.getExtras().getInt("currentFloor");
 
         mainView = (RelativeLayout) findViewById(R.id.canvas_layout);
-        mainView.setBackgroundDrawable(Building.getInstance().floorPicture.get(currentFloor));
+        mainView.setBackgroundDrawable(FloorPicture.getInstance().floorPicture.get(currentFloor));
         drawNodes();
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
@@ -60,7 +70,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             @Override
             public void onItemClick(AdapterView parent, View v, int position, long id) {
                 currentFloor = position;
-                mainView.setBackgroundDrawable(Building.getInstance().floorPicture.get(currentFloor));
+                mainView.setBackgroundDrawable(FloorPicture.getInstance().floorPicture.get(currentFloor));
                 drawNodes();
                 Toast.makeText(mContext, Integer.toString(position+1), Toast.LENGTH_SHORT).show();
 
@@ -107,12 +117,16 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                                 R.string.success_node_msg,
                                 Toast.LENGTH_SHORT).show();
 
+                        // 노드 추가
                         Building.getInstance().nodes.add(new Node((int)x, (int)y, currentFloor, nodeName.getText().toString(), 1));
-
-                        Intent intent = new Intent(mContext, AdminMainActivity.class);
-                        startActivity(intent);
+                        // DB에 업로드
+                        databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
 
                         dialog.dismiss();
+
+                        Intent intent = new Intent(mContext, AdminMainActivity.class);
+                        intent.putExtra("currentFloor", currentFloor);
+                        startActivity(intent);
                     }else{
                         Toast.makeText(AdminMainActivity.this,
                                 R.string.error_node_msg,

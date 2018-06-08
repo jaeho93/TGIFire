@@ -121,7 +121,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                     byte[] data = baos.toByteArray();
 
                     // 층별 사진 정보 저장
-                    Building.getInstance().floorPicture.add(new BitmapDrawable(bitmap));
+                    FloorPicture.getInstance().floorPicture.add(new BitmapDrawable(bitmap));
 
                     StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(i + 1) + ".png");
                     UploadTask uploadTask = spaceReference.putBytes(data);
@@ -139,6 +139,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                             // 업로드 완료 시 AdminActivity로 이동
                             if (uploadCount == adapter.getItemCount()) {
                                 Intent AdminMainActivityIntent = new Intent(mContext, AdminMainActivity.class);
+                                AdminMainActivityIntent.putExtra("currentFloor", 0);
                                 startActivity(AdminMainActivityIntent);
                             }
                         }

@@ -14,7 +14,6 @@ public class Building{
     public String address;
     public int floorNumber;
     public ArrayList<Node> nodes;
-    public ArrayList<BitmapDrawable> floorPicture;
 
     private Building() {
         // Default constructor required for calls to DataSnapshot.getValue(User.class)
@@ -36,6 +35,5 @@ public class Building{
         this.address = address;
         this.floorNumber = floorNumber;
         this.nodes = nodes;
-        this.floorPicture = new ArrayList<BitmapDrawable>();
     }
 }
