@@ -3,6 +3,7 @@ package com.example.user.tgifire;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -29,7 +30,6 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
 
     int currentFloor = 0;
 
-    Building building;
     ListView listview;
     RelativeLayout mainView;
 
@@ -40,16 +40,16 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
         setContentView(R.layout.activity_admin_main);
 
         Intent intent = getIntent();
-        building = (Building) intent.getSerializableExtra("building");
 
-        String[] items = new String[building.floorNumber];
-        for (int i = 0; i < building.floorNumber; i++) {
+        String[] items = new String[Building.getInstance().floorNumber];
+        for (int i = 0; i < Building.getInstance().floorNumber; i++) {
             items[i] = Integer.toString(i + 1) + "층";
         }
 
         currentFloor = 0;
 
         mainView = (RelativeLayout) findViewById(R.id.canvas_layout);
+        mainView.setBackgroundDrawable(Building.getInstance().floorPicture.get(currentFloor));
         drawNodes();
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
@@ -60,6 +60,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             @Override
             public void onItemClick(AdapterView parent, View v, int position, long id) {
                 currentFloor = position;
+                mainView.setBackgroundDrawable(Building.getInstance().floorPicture.get(currentFloor));
                 drawNodes();
                 Toast.makeText(mContext, Integer.toString(position+1), Toast.LENGTH_SHORT).show();
 
@@ -92,7 +93,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             }
             AlertDialog.Builder mBuilder = new AlertDialog.Builder(AdminMainActivity.this);
             View mView = getLayoutInflater().inflate(R.layout.add_node, null);
-            final EditText newNode = (EditText) mView.findViewById(R.id.new_node);
+            final EditText nodeName = (EditText) mView.findViewById(R.id.editNodeName);
             Button mNode = (Button) mView.findViewById(R.id.btnNode);
 
             mBuilder.setView(mView);
@@ -101,13 +102,14 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             mNode.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if(!newNode.getText().toString().isEmpty()){
+                    if(!nodeName.getText().toString().isEmpty()){
                         Toast.makeText(AdminMainActivity.this,
                                 R.string.success_node_msg,
                                 Toast.LENGTH_SHORT).show();
 
+                        Building.getInstance().nodes.add(new Node((int)x, (int)y, currentFloor, nodeName.getText().toString(), 1));
+
                         Intent intent = new Intent(mContext, AdminMainActivity.class);
-                        intent.putExtra("building", building);
                         startActivity(intent);
 
                         dialog.dismiss();
@@ -122,9 +124,11 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
         }
     }
 
-    public void onButtonClick(View v){
+    public void onPlusButtonClick(View v){
         Toast.makeText(this, getString(R.string.add_node_toast), Toast.LENGTH_LONG).show();
         View view = new AdminMainActivity.MyView( this);
+        view.setAlpha(0.5f);
+        view.setBackgroundDrawable(mainView.getBackground());
         setContentView(view);
     }
 
@@ -132,15 +136,20 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
         mainView.removeAllViewsInLayout();
 
         RelativeLayout.LayoutParams lp;
-        Button newNode = new Button(this); //버튼을 선언
 
-        lp = new RelativeLayout.LayoutParams(120, 120);
-        lp.leftMargin = currentFloor*150+50;
-        lp.topMargin = currentFloor*150+50;
-        newNode.setLayoutParams(lp);
-        newNode.setAlpha(0.75f);
+        for (int i = 0; i < Building.getInstance().nodes.size(); i++) {
+            if (Building.getInstance().nodes.get(i).floor == currentFloor) {
+                Button newNode = new Button(this); //버튼을 선언
 
-        newNode.setBackgroundResource(R.drawable.node_green); //버튼 이미지를 지정(int)
-        mainView.addView(newNode); //지정된 뷰에 셋팅완료된 Button을 추가
+                lp = new RelativeLayout.LayoutParams(120, 120);
+                lp.leftMargin = Building.getInstance().nodes.get(i).x;
+                lp.topMargin = Building.getInstance().nodes.get(i).y;
+                newNode.setLayoutParams(lp);
+                newNode.setAlpha(0.75f);
+
+                newNode.setBackgroundResource(R.drawable.node_green); //버튼 이미지를 지정(int)
+                mainView.addView(newNode); //지정된 뷰에 셋팅완료된 Button을 추가
+            }
+        }
     }
 }

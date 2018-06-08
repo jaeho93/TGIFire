@@ -7,28 +7,11 @@
     android:orientation="horizontal"
     tools:context="com.example.user.tgifire.AdminMainActivity">
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="bottom|end">
-
-        <Button
-            android:id="@+id/btn_start"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="#00ff0000"
-            android:drawableTop="@drawable/plus"
-            android:onClick="onButtonClick"
-            android:padding="0sp"
-            android:scaleType="centerCrop" />
-    </LinearLayout>
-
     <RelativeLayout
         android:id="@+id/canvas_layout"
         android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
     </RelativeLayout>
 
     <android.support.v4.widget.DrawerLayout
@@ -43,4 +26,20 @@
             android:background="#FFFFFF"
             android:id="@+id/drawer_menulist" />
     </android.support.v4.widget.DrawerLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="bottom|end">
+
+        <Button
+            android:id="@+id/btn_start"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="#00ff0000"
+            android:drawableTop="@drawable/plus"
+            android:onClick="onPlusButtonClick"
+            android:scaleType="centerCrop" />
+    </LinearLayout>
 </RelativeLayout>
