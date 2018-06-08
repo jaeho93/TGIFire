@@ -1,17 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:showIn="navigation_view">
-
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/firstFloor"
-            android:title="1층" />
-        <item
-            android:id="@+id/secondFloor"
-            android:title="2층" />
-        <item
-            android:id="@+id/thirdFloor"
-            android:title="3층" />
-    </group>
-</menu>
+<ListView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="start"
+    android:background="#FFFFFF">
+</ListView>
