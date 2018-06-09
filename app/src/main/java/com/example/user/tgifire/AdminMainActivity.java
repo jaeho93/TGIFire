@@ -31,6 +31,19 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Map;
+
+import cloud.artik.api.MessagesApi;
+import cloud.artik.api.UsersApi;
+import cloud.artik.client.ApiCallback;
+import cloud.artik.client.ApiClient;
+import cloud.artik.client.ApiException;
+import cloud.artik.model.Action;
+import cloud.artik.model.NormalizedAction;
+import cloud.artik.model.NormalizedActionsEnvelope;
+import cloud.artik.model.NormalizedMessagesEnvelope;
 
 public class AdminMainActivity extends AppCompatActivity {//implements NavigationView.OnNavigationItemSelectedListener {
     Context mContext = this;
@@ -43,6 +56,10 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
     // DB 관련
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     DatabaseReference databaseReference = firebaseDatabase.getReference();
+
+    // Artik 관련
+    private MessagesApi mMessagesApi = null;
+    private String mAccessToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,6 +95,12 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                 drawer.closeDrawer(Gravity.START) ;
             }
         });
+
+        AuthStateDAL authStateDAL = new AuthStateDAL(this);
+        mAccessToken = authStateDAL.readAuthState().getAccessToken();
+
+        setupArtikCloudApi();
+        getLatestMsg();
     }
 
     protected class MyView extends View {
@@ -136,14 +159,6 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             });
             return true;
         }
-    }
-
-    public void onPlusButtonClick(View v){
-        Toast.makeText(this, getString(R.string.add_node_toast), Toast.LENGTH_LONG).show();
-        View view = new AdminMainActivity.MyView( this);
-        view.setAlpha(0.5f);
-        view.setBackgroundDrawable(mainView.getBackground());
-        setContentView(view);
     }
 
     private void drawNodes() {
@@ -230,5 +245,55 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                 mainView.addView(newNode); //지정된 뷰에 셋팅완료된 Button을 추가
             }
         }
+    }
+
+    private void setupArtikCloudApi() {
+        ApiClient mApiClient = new ApiClient();
+        mApiClient.setAccessToken(mAccessToken);
+
+        mMessagesApi = new MessagesApi(mApiClient);
+    }
+
+    private void getLatestMsg() {
+        final String tag = "MessagesAsync";
+        try {
+            int messageCount = 1;
+            mMessagesApi.getLastNormalizedMessagesAsync(messageCount, Config.DEVICE_ID, null,
+                    new ApiCallback<NormalizedMessagesEnvelope>() {
+                        @Override
+                        public void onFailure(ApiException exc, int i, Map<String, List<String>> stringListMap) {
+                            processFailure(tag, exc);
+                        }
+
+                        @Override
+                        public void onSuccess(NormalizedMessagesEnvelope result, int i, Map<String, List<String>> stringListMap) {
+                            Log.v(tag, " onSuccess latestMessage = " + result.getData().toString());
+                            String mid = "";
+                            String data = "";
+                            if (!result.getData().isEmpty()) {
+                                mid = result.getData().get(0).getMid();
+                                data = result.getData().get(0).getData().toString();
+                            }
+                            Log.v(tag, "DATA: " + data);
+                        }
+
+                        @Override
+                        public void onUploadProgress(long bytes, long contentLen, boolean done) {
+                        }
+
+                        @Override
+                        public void onDownloadProgress(long bytes, long contentLen, boolean done) {
+                        }
+                    });
+
+        } catch (ApiException exc) {
+            processFailure(tag, exc);
+        }
+    }
+
+    private void processFailure(final String context, ApiException exc) {
+        String errorDetail = " onFailure with exception" + exc;
+        Log.w(context, errorDetail);
+        exc.printStackTrace();
     }
 }
