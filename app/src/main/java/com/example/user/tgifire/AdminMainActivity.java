@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -31,6 +32,28 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import cloud.artik.api.MessagesApi;
+import cloud.artik.api.UsersApi;
+import cloud.artik.client.ApiCallback;
+import cloud.artik.client.ApiClient;
+import cloud.artik.client.ApiException;
+import cloud.artik.model.Acknowledgement;
+import cloud.artik.model.Action;
+import cloud.artik.model.ActionOut;
+import cloud.artik.model.MessageOut;
+import cloud.artik.model.NormalizedAction;
+import cloud.artik.model.NormalizedActionsEnvelope;
+import cloud.artik.model.NormalizedMessagesEnvelope;
+import cloud.artik.model.UserEnvelope;
+import cloud.artik.model.WebSocketError;
+import cloud.artik.websocket.ArtikCloudWebSocketCallback;
+import cloud.artik.websocket.FirehoseWebSocket;
+import okhttp3.OkHttpClient;
 
 public class AdminMainActivity extends AppCompatActivity {//implements NavigationView.OnNavigationItemSelectedListener {
     Context mContext = this;
@@ -44,11 +67,19 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     DatabaseReference databaseReference = firebaseDatabase.getReference();
 
+    // Artik 관련
+    private UsersApi mUserApi = null;
+    private MessagesApi mMessagesApi = null;
+    private String mAccessToken;
+    private String userID;
+    private FirehoseWebSocket mFirehoseWebSocket;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_admin_main);
+        Log.d("WHYWHYWHYWHYWHY", "@@@@@@@@@@");
 
         String[] items = new String[Building.getInstance().floorNumber];
         for (int i = 0; i < Building.getInstance().floorNumber; i++) {
@@ -78,6 +109,13 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                 drawer.closeDrawer(Gravity.START) ;
             }
         });
+
+        AuthStateDAL authStateDAL = new AuthStateDAL(this);
+        mAccessToken = authStateDAL.readAuthState().getAccessToken();
+
+        setupArtikCloudApi();
+        getUserInfo();
+        //getSensorState.execute("");
     }
 
     protected class MyView extends View {
@@ -118,7 +156,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                                 Toast.LENGTH_SHORT).show();
 
                         // 노드 추가
-                        Building.getInstance().nodes.add(new Node((int)x, (int)y, currentFloor, nodeName.getText().toString(), 1));
+                        Building.getInstance().nodes.add(new Node((int)x, (int)y, currentFloor, nodeName.getText().toString(), false));
                         // DB에 업로드
                         databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
 
@@ -136,14 +174,6 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             });
             return true;
         }
-    }
-
-    public void onPlusButtonClick(View v){
-        Toast.makeText(this, getString(R.string.add_node_toast), Toast.LENGTH_LONG).show();
-        View view = new AdminMainActivity.MyView( this);
-        view.setAlpha(0.5f);
-        view.setBackgroundDrawable(mainView.getBackground());
-        setContentView(view);
     }
 
     private void drawNodes() {
@@ -183,7 +213,10 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                 lp.topMargin = Building.getInstance().nodes.get(i).y - 60;
                 newNode.setLayoutParams(lp);
                 newNode.setAlpha(0.75f);
-                newNode.setBackgroundResource(R.drawable.node_green); //버튼 이미지를 지정(int)
+                if (Building.getInstance().nodes.get(i).state)
+                    newNode.setBackgroundResource(R.drawable.node_red); //버튼 이미지를 지정(int)
+                else
+                    newNode.setBackgroundResource(R.drawable.node_green); //버튼 이미지를 지정(int)
                 newNode.setTag(i);
 
                 newNode.setOnClickListener(new Button.OnClickListener() {
@@ -209,10 +242,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                                 databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
 
                                 dialog.dismiss();
-
-                                Intent intent = new Intent(mContext, AdminMainActivity.class);
-                                intent.putExtra("currentFloor", currentFloor);
-                                startActivity(intent);
+                                drawNodes();
                             }
                         });
                         buttonNodeExit.setOnClickListener(new Button.OnClickListener() {
@@ -231,4 +261,139 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             }
         }
     }
+
+    private void setupArtikCloudApi() {
+        ApiClient mApiClient = new ApiClient();
+        mApiClient.setAccessToken(mAccessToken);
+
+        mUserApi = new UsersApi(mApiClient);
+        mMessagesApi = new MessagesApi(mApiClient);
+    }
+
+    private void getUserInfo() {
+        try {
+            mUserApi.getSelfAsync(new ApiCallback<UserEnvelope>() {
+                @Override
+                public void onFailure(ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
+                    processFailure("GetUserInfo", e);
+                }
+
+                @Override
+                public void onSuccess(UserEnvelope result, int statusCode, Map<String, List<String>> responseHeaders) {
+                    userID = result.getData().getId();
+                    try {
+                        Log.d("GetUserInfo", userID.toString());
+                        connectFirehoseWebSocket();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onUploadProgress(long bytesWritten, long contentLength, boolean done) {
+
+                }
+
+                @Override
+                public void onDownloadProgress(long bytesRead, long contentLength, boolean done) {
+
+                }
+            });
+        } catch (ApiException exc) {
+            processFailure("GetUserInfo", exc);
+        }
+    }
+
+    private void connectFirehoseWebSocket() throws Exception {
+        OkHttpClient client;
+        client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(100, TimeUnit.SECONDS)
+                .build();
+
+        mFirehoseWebSocket = new FirehoseWebSocket(client, mAccessToken, Config.DEVICE_ID, null, null, userID, new ArtikCloudWebSocketCallback() {
+            @Override
+            public void onOpen(int httpStatus, String httpStatusMessage) {
+                Log.d("WebSocketOpen", httpStatusMessage);
+            }
+
+            @Override
+            public void onMessage(MessageOut messageOut) {
+                Map<String, Object> data = messageOut.getData();
+                for (String key : data.keySet() ) {
+                    boolean state = false;
+                    Log.d("WebSocketMsg", data.get(key).toString());
+                    if (data.get(key).toString().equals("open")) {
+                        state = true;
+                    }
+                    for (int i = 0; i < Building.getInstance().nodes.size(); i++) {
+                        Building.getInstance().nodes.get(0).state = state;
+                    }
+                }
+
+                // DB에 업로드
+                databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
+
+                runOnUiThread(new Runnable(){
+                    @Override
+                    public void run() {
+                        drawNodes();
+                    }
+                });
+            }
+
+            @Override
+            public void onAction(ActionOut action) {
+            }
+
+            @Override
+            public void onAck(Acknowledgement ack) {
+
+            }
+
+            @Override
+            public void onClose(int code, String reason, boolean remote) {
+            }
+
+            @Override
+            public void onError(WebSocketError error) {
+                Log.d("WebSocketError", error.toString());
+            }
+
+            @Override
+            public void onPing(long timestamp) {
+                Log.d("WebSocketPing", "PING");
+            }
+        });
+        mFirehoseWebSocket.connect();
+    }
+
+    /*
+    AsyncTask<String, String, String> draw = new AsyncTask<String, String, String>() {
+        @Override
+        protected String doInBackground(String... strings) {
+            while (!this.isCancelled()) {
+                try {
+                    Thread.sleep(3000);
+                    publishProgress("");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+            drawNodes();
+        }
+    };*/
+
+    private void processFailure(final String context, ApiException exc) {
+        String errorDetail = " onFailure with exception" + exc;
+        Log.w(context, errorDetail);
+        exc.printStackTrace();
+    };
 }
