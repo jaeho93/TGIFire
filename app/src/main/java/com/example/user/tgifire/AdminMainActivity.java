@@ -143,6 +143,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             View mView = getLayoutInflater().inflate(R.layout.add_node, null);
             final EditText nodeName = (EditText) mView.findViewById(R.id.editNewNodeName);
             Button mNode = (Button) mView.findViewById(R.id.btnNode);
+            Button exitBtn = (Button) mView.findViewById(R.id.plusNodeExit);
 
             mBuilder.setView(mView);
             final AlertDialog dialog = mBuilder.create();
@@ -163,6 +164,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                         dialog.dismiss();
 
                         Intent intent = new Intent(mContext, AdminMainActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         intent.putExtra("currentFloor", currentFloor);
                         startActivity(intent);
                     }else{
@@ -170,6 +172,15 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                                 R.string.error_node_msg,
                                 Toast.LENGTH_SHORT).show();
                     }
+                }
+            });
+            exitBtn.setOnClickListener(new Button.OnClickListener() {
+                public void onClick(View v) {
+                    dialog.dismiss();
+                    Intent intent = new Intent(mContext, AdminMainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.putExtra("currentFloor", currentFloor);
+                    startActivity(intent);
                 }
             });
             return true;

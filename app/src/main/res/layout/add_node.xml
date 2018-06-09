@@ -24,12 +24,29 @@
         android:hint="@string/node_name"
         android:inputType="textEmailAddress" />
 
-    <Button
-        android:id="@+id/btnNode"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:background="#8c8c8c"
-        android:text="@string/add_node_complete"
-        android:textColor="@android:color/white" />
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnNode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:background="#8c8c8c"
+            android:text="@string/add_node_complete"
+            android:textColor="@android:color/white"
+            android:layout_weight="1"/>
+
+        <Button
+            android:id="@+id/plusNodeExit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:background="#8c8c8c"
+            android:text="닫기"
+            android:textColor="@android:color/white"
+            android:layout_weight="1"/>
+    </LinearLayout>
 </LinearLayout>
