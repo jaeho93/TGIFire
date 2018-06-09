@@ -242,10 +242,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                                 databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
 
                                 dialog.dismiss();
-
-                                Intent intent = new Intent(mContext, AdminMainActivity.class);
-                                intent.putExtra("currentFloor", currentFloor);
-                                startActivity(intent);
+                                drawNodes();
                             }
                         });
                         buttonNodeExit.setOnClickListener(new Button.OnClickListener() {
@@ -331,15 +328,19 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                         state = true;
                     }
                     for (int i = 0; i < Building.getInstance().nodes.size(); i++) {
-                        Building.getInstance().nodes.get(i).state = state;
+                        Building.getInstance().nodes.get(0).state = state;
                     }
                 }
 
                 // DB에 업로드
                 databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
-                Intent intent = new Intent(mContext, AdminMainActivity.class);
-                intent.putExtra("currentFloor", currentFloor);
-                startActivity(intent);
+
+                runOnUiThread(new Runnable(){
+                    @Override
+                    public void run() {
+                        drawNodes();
+                    }
+                });
             }
 
             @Override
