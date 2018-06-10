@@ -218,7 +218,12 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
             }
         });
 
-        adapter.notifyDataSetChanged();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                adapter.notifyDataSetChanged();
+            }
+        });
     }
 
     private void runAnimation() {

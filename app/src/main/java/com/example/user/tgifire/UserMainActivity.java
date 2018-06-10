@@ -49,7 +49,7 @@ public class UserMainActivity extends AppCompatActivity {
     DatabaseReference databaseReference = firebaseDatabase.getReference();
     FirebaseStorage storage = FirebaseStorage.getInstance("gs://tgifire-cdf25.appspot.com/");
     StorageReference storageReference = storage.getReference();
-    private String mAccessToken;
+    private String nearestID = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +60,7 @@ public class UserMainActivity extends AppCompatActivity {
         mainView = (RelativeLayout) findViewById(R.id.canvas_layout);
         currentFloor = 0;
 
-        loadItemsFromDBFirst();
+        getNearestID();
     }
 
     private void InitializeUI() {
@@ -90,7 +90,7 @@ public class UserMainActivity extends AppCompatActivity {
         drawNodes();
 
         // 노드 센서 정보를 DB에서 계속 수신
-        databaseReference.child("BUILDING").child("1ac57e91669246d99cf43dc7abf543ed").addValueEventListener(new ValueEventListener() {
+        databaseReference.child("BUILDING").child(nearestID).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue(Building.class) != null) {
@@ -197,11 +197,51 @@ public class UserMainActivity extends AppCompatActivity {
         }
     }
 
+    private double getDistance(double x1, double y1, double x2, double y2) {
+        return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+    }
+
+    private void getNearestID() {
+        databaseReference.child("BUILDING").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                GPSLocation GPS = new GPSLocation(mContext);
+                double GPS_X = GPS.getGPS_X();
+                double GPS_Y = GPS.getGPS_Y();
+                double min_distance = 1000000.0;
+
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    double gps_x = 0.0, gps_y = 0.0;
+                    for (DataSnapshot s : snapshot.getChildren()) {
+                        if ("GPS_X".equals(s.getKey())) {
+                            gps_x = Double.parseDouble(s.getValue().toString());
+                        }
+                        if ("GPS_Y".equals(s.getKey())) {
+                            gps_y = Double.parseDouble(s.getValue().toString());
+                        }
+                    }
+
+                    if (min_distance > getDistance(GPS_X, GPS_Y, gps_x, gps_y)) {
+                        min_distance = getDistance(GPS_X, GPS_Y, gps_x, gps_y);
+                        nearestID = snapshot.getKey();
+                    }
+                }
+
+                loadItemsFromDBFirst();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
+
     public void loadItemsFromDBFirst() {
         Building.getInstance().Initialize();
         FloorPicture.getInstance().Initialize();
+        Log.d("@@@@@@@@", nearestID);
 
-        databaseReference.child("BUILDING").child("1ac57e91669246d99cf43dc7abf543ed").addListenerForSingleValueEvent(new ValueEventListener() {
+        databaseReference.child("BUILDING").child(nearestID).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue(Building.class) != null) {
@@ -228,7 +268,7 @@ public class UserMainActivity extends AppCompatActivity {
                 downloadCount = 0;
                 for (floorIndex = 0; floorIndex < Building.getInstance().floorNumber; floorIndex++) {
                     final long ONE_MEGABYTE = 1024 * 1024;
-                    StorageReference spaceReference = storageReference.child("1ac57e91669246d99cf43dc7abf543ed/floor" + Integer.toString(floorIndex + 1) + ".png");
+                    StorageReference spaceReference = storageReference.child(nearestID + "/floor" + Integer.toString(floorIndex + 1) + ".png");
                     spaceReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
                         final int index = floorIndex;
                         @Override
