@@ -148,6 +148,10 @@ public class UserMainActivity extends AppCompatActivity {
         });
         mainView.addView(plusButton);
 
+        if ("".equals(nearestID)) {
+            return;
+        }
+
         // 노드들
         for (int i = 0; i < Building.getInstance().nodes.size(); i++) {
             if (Building.getInstance().nodes.get(i).floor == currentFloor) {
@@ -227,6 +231,10 @@ public class UserMainActivity extends AppCompatActivity {
                     }
                 }
 
+                if (min_distance >= 1) {
+                    nearestID = "";
+                }
+
                 loadItemsFromDBFirst();
             }
 
@@ -236,10 +244,15 @@ public class UserMainActivity extends AppCompatActivity {
         });
     }
 
-    public void loadItemsFromDBFirst() {
+    private void loadItemsFromDBFirst() {
         Building.getInstance().Initialize();
         FloorPicture.getInstance().Initialize();
-        Log.d("@@@@@@@@", nearestID);
+
+        if ("".equals(nearestID)) {
+            mainView.setBackgroundResource(R.drawable.error);
+            drawNodes();
+            return;
+        }
 
         databaseReference.child("BUILDING").child(nearestID).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
