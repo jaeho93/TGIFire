@@ -1,11 +1,19 @@
 package com.example.user.tgifire;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -311,6 +319,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                         Log.d("WebSocketMsg", data.get(key).toString() + ", " + Integer.toString(currentIndex));
                         if (data.get(key).toString().equals("open")) {
                             Building.getInstance().nodes.get(currentIndex).state = true;
+                            sendNoti();
                         }
                         if (data.get(key).toString().equals("closed")) {
                             Building.getInstance().nodes.get(currentIndex).state = false;
@@ -354,4 +363,54 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             mFirehoseWebSocket.get(serverNodeIndex).connect();
         }
     }
+
+    private void sendNoti () {
+
+        Bitmap mLargeIconForNoti =
+                BitmapFactory.decodeResource(getResources(), R.drawable.main_icon);
+        PendingIntent mPendingIntent = PendingIntent.getActivity(
+                AdminMainActivity.this,
+                0,
+                new Intent(getApplicationContext(), AdminMainActivity.class),
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationCompat.Builder mBuilder;
+
+        if (Build.VERSION.SDK_INT >= 26) {
+
+            String channelId = "one-channel";
+            String channelName = "Channel One";
+            String channelDescription = "My Channel One";
+            NotificationChannel mchannel =
+                    new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_DEFAULT);
+            mchannel.setDescription(channelDescription);
+            mchannel.enableLights(true);
+            mchannel.setLightColor(Color.RED);
+
+            notificationManager.createNotificationChannel(mchannel);
+
+            mBuilder = new NotificationCompat.Builder(AdminMainActivity.this, channelId);
+
+        }
+
+        else {
+
+            mBuilder = new NotificationCompat.Builder(AdminMainActivity.this);
+
+        }
+
+                mBuilder.setSmallIcon(R.drawable.main_icon)
+                .setContentTitle("TGIF")
+                .setContentText("불법적재물이 감지되었습니다!")
+                .setDefaults(Notification.DEFAULT_VIBRATE)
+                .setLargeIcon(mLargeIconForNoti)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+                .setContentIntent(mPendingIntent);
+
+                notificationManager.notify(0, mBuilder.build());
+
+    }
+
 }
