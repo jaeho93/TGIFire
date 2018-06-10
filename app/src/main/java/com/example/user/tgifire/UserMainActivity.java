@@ -49,6 +49,7 @@ public class UserMainActivity extends AppCompatActivity {
     DatabaseReference databaseReference = firebaseDatabase.getReference();
     FirebaseStorage storage = FirebaseStorage.getInstance("gs://tgifire-cdf25.appspot.com/");
     StorageReference storageReference = storage.getReference();
+    private String mAccessToken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,7 +90,7 @@ public class UserMainActivity extends AppCompatActivity {
         drawNodes();
 
         // 노드 센서 정보를 DB에서 계속 수신
-        databaseReference.child("BUILDING").child("bjp").addValueEventListener(new ValueEventListener() {
+        databaseReference.child("BUILDING").child("1ac57e91669246d99cf43dc7abf543ed").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue(Building.class) != null) {
@@ -171,8 +172,6 @@ public class UserMainActivity extends AppCompatActivity {
                         View mView = getLayoutInflater().inflate(R.layout.node_info_uneditable, null);
                         final TextView nodeName = (TextView) mView.findViewById(R.id.textNodeName);
                         final TextView nodeState = (TextView) mView.findViewById(R.id.textNodeState);
-                        Button buttonNotUse = (Button) mView.findViewById(R.id.buttonNotUse);
-                        buttonNotUse.setTag((int) v.getTag());
                         Button buttonUserNodeExit = (Button) mView.findViewById(R.id.buttonUserNodeExit);
 
                         nodeName.setText(Building.getInstance().nodes.get((int) v.getTag()).name);
@@ -202,7 +201,7 @@ public class UserMainActivity extends AppCompatActivity {
         Building.getInstance().Initialize();
         FloorPicture.getInstance().Initialize();
 
-        databaseReference.child("BUILDING").child("bjp").addListenerForSingleValueEvent(new ValueEventListener() {
+        databaseReference.child("BUILDING").child("1ac57e91669246d99cf43dc7abf543ed").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue(Building.class) != null) {
@@ -229,7 +228,7 @@ public class UserMainActivity extends AppCompatActivity {
                 downloadCount = 0;
                 for (floorIndex = 0; floorIndex < Building.getInstance().floorNumber; floorIndex++) {
                     final long ONE_MEGABYTE = 1024 * 1024;
-                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(floorIndex + 1) + ".png");
+                    StorageReference spaceReference = storageReference.child("1ac57e91669246d99cf43dc7abf543ed/floor" + Integer.toString(floorIndex + 1) + ".png");
                     spaceReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
                         final int index = floorIndex;
                         @Override
