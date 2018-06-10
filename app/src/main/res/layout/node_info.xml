@@ -51,7 +51,7 @@
             android:layout_height="match_parent"
             android:layout_margin="5dp"
             android:background="#8c8c8c"
-            android:text="닫기"
+            android:text="확인"
             android:textColor="@android:color/white"
             android:layout_weight="1"/>
     </LinearLayout>

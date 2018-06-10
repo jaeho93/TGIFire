@@ -123,7 +123,7 @@ public class UserMainActivity extends AppCompatActivity {
 
         RelativeLayout.LayoutParams lp;
 
-        // 노드 추가 버튼
+        // 신고 버튼
         Button plusButton = new Button(this); //버튼을 선언
 
         lp = new RelativeLayout.LayoutParams(120, 120);
@@ -133,10 +133,16 @@ public class UserMainActivity extends AppCompatActivity {
         lp.bottomMargin = 50;
         plusButton.setLayoutParams(lp);
         plusButton.setAlpha(0.9f);
-        plusButton.setBackgroundResource(R.drawable.plus); //버튼 이미지를 지정(int)
+        plusButton.setBackgroundResource(R.drawable.report); //버튼 이미지를 지정(int)
         plusButton.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                Toast.makeText(mContext, getString(R.string.add_node_toast), Toast.LENGTH_LONG).show();
+                GPSLocation GPS = new GPSLocation(mContext);
+                double GPS_X = GPS.getGPS_X();
+                double GPS_Y = GPS.getGPS_Y();
+
+                Intent reportActivityIntent = new Intent(mContext, ReportActivity.class);
+                reportActivityIntent.putExtra("address", GPSLocation.getAddress(mContext, GPS_X, GPS_Y));
+                startActivity(reportActivityIntent);
             }
         });
         mainView.addView(plusButton);
@@ -243,53 +249,4 @@ public class UserMainActivity extends AppCompatActivity {
             }
         });
     }
-
-    /*
-    AsyncTask<String, String, String> loadNodeTask = new AsyncTask<String, String, String>() {
-        @Override
-        protected String doInBackground(String... strings) {
-            while (!this.isCancelled()) {
-                try {
-                    Thread.sleep(5000);
-                    publishProgress("");
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-
-            databaseReference.child("BUILDING").child("bjp").addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.getValue(Building.class) != null) {
-                        Building.getInstance().SetData(dataSnapshot.getValue(Building.class).buildingName,
-                                dataSnapshot.getValue(Building.class).GPS_X,
-                                dataSnapshot.getValue(Building.class).GPS_Y,
-                                dataSnapshot.getValue(Building.class).address,
-                                dataSnapshot.getValue(Building.class).floorNumber,
-                                dataSnapshot.getValue(Building.class).nodes);
-                        if (Building.getInstance().nodes == null) {
-                            Building.getInstance().nodes = new ArrayList<Node>();
-                        }
-
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                drawNodes();
-                            }
-                        });
-                    }
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                }
-            });
-        }
-    };*/
 }

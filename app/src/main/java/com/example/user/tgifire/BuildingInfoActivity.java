@@ -173,7 +173,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                     double GPS_X = GPS.getGPS_X();
                     double GPS_Y = GPS.getGPS_Y();
                     Building.getInstance().SetData("",
-                            GPS.getGPS_X(), GPS.getGPS_Y(), GPSLocation.getAddress(mContext, GPS_X, GPS_Y), 0, new ArrayList<Node>());
+                            GPS_X, GPS_Y, GPSLocation.getAddress(mContext, GPS_X, GPS_Y), 0, new ArrayList<Node>());
                     return;
                 }
 

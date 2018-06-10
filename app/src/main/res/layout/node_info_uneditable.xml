@@ -29,16 +29,6 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/buttonNotUse"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_margin="5dp"
-            android:background="#8c8c8c"
-            android:text="신고"
-            android:textColor="@android:color/white"
-            android:layout_weight="1" />
-
-        <Button
             android:id="@+id/buttonUserNodeExit"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
