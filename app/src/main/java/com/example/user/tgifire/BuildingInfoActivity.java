@@ -224,7 +224,6 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                 adapter.notifyDataSetChanged();
             }
         });
-
     }
 
     private void runAnimation() {
