@@ -3,64 +3,41 @@ package com.example.user.tgifire;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.widget.LinearLayoutCompat;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.GridLayout.LayoutParams;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import cloud.artik.api.MessagesApi;
-import cloud.artik.api.UsersApi;
-import cloud.artik.client.ApiCallback;
-import cloud.artik.client.ApiClient;
-import cloud.artik.client.ApiException;
 import cloud.artik.model.Acknowledgement;
-import cloud.artik.model.Action;
 import cloud.artik.model.ActionOut;
 import cloud.artik.model.MessageOut;
-import cloud.artik.model.NormalizedAction;
-import cloud.artik.model.NormalizedActionsEnvelope;
-import cloud.artik.model.NormalizedMessagesEnvelope;
-import cloud.artik.model.UserEnvelope;
 import cloud.artik.model.WebSocketError;
 import cloud.artik.websocket.ArtikCloudWebSocketCallback;
 import cloud.artik.websocket.FirehoseWebSocket;
@@ -368,12 +345,6 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
 
         Bitmap mLargeIconForNoti =
                 BitmapFactory.decodeResource(getResources(), R.drawable.main_icon);
-        PendingIntent mPendingIntent = PendingIntent.getActivity(
-                AdminMainActivity.this,
-                0,
-                new Intent(getApplicationContext(), AdminMainActivity.class),
-                PendingIntent.FLAG_UPDATE_CURRENT
-        );
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         NotificationCompat.Builder mBuilder;
 
@@ -406,8 +377,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                 .setDefaults(Notification.DEFAULT_VIBRATE)
                 .setLargeIcon(mLargeIconForNoti)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setAutoCancel(true)
-                .setContentIntent(mPendingIntent);
+                .setAutoCancel(true);
 
                 notificationManager.notify(0, mBuilder.build());
 

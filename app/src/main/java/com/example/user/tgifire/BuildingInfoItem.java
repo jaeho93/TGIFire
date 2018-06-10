@@ -1,7 +1,6 @@
 package com.example.user.tgifire;
 
 import android.graphics.Bitmap;
-import android.util.Log;
 
 public class BuildingInfoItem {
     private int index;
