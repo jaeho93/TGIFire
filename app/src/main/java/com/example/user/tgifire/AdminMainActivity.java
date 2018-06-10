@@ -25,11 +25,14 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.GridLayout.LayoutParams;
 
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -80,7 +83,6 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_admin_main);
-        Log.d("WHYWHYWHYWHYWHY", "@@@@@@@@@@");
 
         String[] items = new String[Building.getInstance().floorNumber];
         for (int i = 0; i < Building.getInstance().floorNumber; i++) {
@@ -94,7 +96,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
         mainView.setBackgroundDrawable(FloorPicture.getInstance().floorPicture.get(currentFloor));
         drawNodes();
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.item_floor, items);
         listview = (ListView) findViewById(R.id.drawer_menulist);
         listview.setAdapter(adapter);
 
@@ -202,7 +204,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
         lp.rightMargin = 50;
         lp.bottomMargin = 50;
         plusButton.setLayoutParams(lp);
-        plusButton.setAlpha(0.5f);
+        plusButton.setAlpha(0.9f);
         plusButton.setBackgroundResource(R.drawable.plus); //버튼 이미지를 지정(int)
         plusButton.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
@@ -237,6 +239,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                         View mView = getLayoutInflater().inflate(R.layout.node_info, null);
                         final EditText nodeName = (EditText) mView.findViewById(R.id.editNodeName);
                         final EditText nodeDID = (EditText) mView.findViewById(R.id.editNodeDID);
+                        final TextView nodeState = (TextView) mView.findViewById(R.id.textNodeAdminState);
                         Button buttonRemoveNode = (Button) mView.findViewById(R.id.buttonRemoveNode);
                         buttonRemoveNode.setTag((int) v.getTag());
                         Button buttonNodeExit = (Button) mView.findViewById(R.id.buttonNodeExit);
@@ -244,6 +247,10 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
 
                         nodeName.setText(Building.getInstance().nodes.get((int) v.getTag()).name);
                         nodeDID.setText(Building.getInstance().nodes.get((int) v.getTag()).did);
+                        if (Building.getInstance().nodes.get((int) v.getTag()).state)
+                            nodeState.setText("불법 적재물이 감지되었습니다.");
+                        else
+                            nodeState.setText("불법 적재물이 없습니다.");
 
                         mBuilder.setView(mView);
                         final AlertDialog dialog = mBuilder.create();
@@ -342,12 +349,13 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                 public void onMessage(MessageOut messageOut) {
                     Map<String, Object> data = messageOut.getData();
                     for (String key : data.keySet()) {
-                        boolean state = false;
                         Log.d("WebSocketMsg", data.get(key).toString() + ", " + Integer.toString(currentIndex));
                         if (data.get(key).toString().equals("open")) {
-                            state = true;
+                            Building.getInstance().nodes.get(currentIndex).state = true;
                         }
-                        Building.getInstance().nodes.get(currentIndex).state = state;
+                        if (data.get(key).toString().equals("closed")) {
+                            Building.getInstance().nodes.get(currentIndex).state = false;
+                        }
                     }
 
                     // DB에 업로드

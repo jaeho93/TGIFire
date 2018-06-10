@@ -36,4 +36,8 @@ public class Building{
         this.floorNumber = floorNumber;
         this.nodes = nodes;
     }
+
+    public void Initialize() {
+        uniqueInstance = null;
+    }
 }
