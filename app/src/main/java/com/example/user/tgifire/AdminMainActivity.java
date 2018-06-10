@@ -68,11 +68,12 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
     DatabaseReference databaseReference = firebaseDatabase.getReference();
 
     // Artik 관련
+    int serverNodeIndex = 0;
     private UsersApi mUserApi = null;
     private MessagesApi mMessagesApi = null;
     private String mAccessToken;
     private String userID;
-    private FirehoseWebSocket mFirehoseWebSocket;
+    private ArrayList<FirehoseWebSocket> mFirehoseWebSocket = new ArrayList<FirehoseWebSocket>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,7 +116,6 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
 
         setupArtikCloudApi();
         getUserInfo();
-        //getSensorState.execute("");
     }
 
     protected class MyView extends View {
@@ -142,6 +142,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             AlertDialog.Builder mBuilder = new AlertDialog.Builder(AdminMainActivity.this);
             View mView = getLayoutInflater().inflate(R.layout.add_node, null);
             final EditText nodeName = (EditText) mView.findViewById(R.id.editNewNodeName);
+            final EditText nodeDID = (EditText) mView.findViewById(R.id.editNewNodeDID);
             Button mNode = (Button) mView.findViewById(R.id.btnNode);
             Button exitBtn = (Button) mView.findViewById(R.id.plusNodeExit);
 
@@ -157,7 +158,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                                 Toast.LENGTH_SHORT).show();
 
                         // 노드 추가
-                        Building.getInstance().nodes.add(new Node((int)x, (int)y, currentFloor, nodeName.getText().toString(), false));
+                        Building.getInstance().nodes.add(new Node((int)x, (int)y, currentFloor, nodeName.getText().toString(), nodeDID.getText().toString(), false));
                         // DB에 업로드
                         databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
 
@@ -235,12 +236,14 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                         AlertDialog.Builder mBuilder = new AlertDialog.Builder(AdminMainActivity.this);
                         View mView = getLayoutInflater().inflate(R.layout.node_info, null);
                         final EditText nodeName = (EditText) mView.findViewById(R.id.editNodeName);
+                        final EditText nodeDID = (EditText) mView.findViewById(R.id.editNodeDID);
                         Button buttonRemoveNode = (Button) mView.findViewById(R.id.buttonRemoveNode);
                         buttonRemoveNode.setTag((int) v.getTag());
                         Button buttonNodeExit = (Button) mView.findViewById(R.id.buttonNodeExit);
                         buttonNodeExit.setTag((int) v.getTag());
 
                         nodeName.setText(Building.getInstance().nodes.get((int) v.getTag()).name);
+                        nodeDID.setText(Building.getInstance().nodes.get((int) v.getTag()).did);
 
                         mBuilder.setView(mView);
                         final AlertDialog dialog = mBuilder.create();
@@ -259,6 +262,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                         buttonNodeExit.setOnClickListener(new Button.OnClickListener() {
                             public void onClick(View v) {
                                 Building.getInstance().nodes.get((int) v.getTag()).name = nodeName.getText().toString();
+                                Building.getInstance().nodes.get((int) v.getTag()).did = nodeDID.getText().toString();
                                 // DB에 업로드
                                 databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
 
@@ -323,84 +327,66 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                 .readTimeout(100, TimeUnit.SECONDS)
                 .build();
 
-        mFirehoseWebSocket = new FirehoseWebSocket(client, mAccessToken, Config.DEVICE_ID, null, null, userID, new ArtikCloudWebSocketCallback() {
-            @Override
-            public void onOpen(int httpStatus, String httpStatusMessage) {
-                Log.d("WebSocketOpen", httpStatusMessage);
-            }
+        // 센서 노드 별 메세지 리스너 등록
+        for (serverNodeIndex = 0; serverNodeIndex < Building.getInstance().nodes.size(); serverNodeIndex++) {
+            Log.d("DEVICE ID", Building.getInstance().nodes.get(serverNodeIndex).did);
 
-            @Override
-            public void onMessage(MessageOut messageOut) {
-                Map<String, Object> data = messageOut.getData();
-                for (String key : data.keySet() ) {
-                    boolean state = false;
-                    Log.d("WebSocketMsg", data.get(key).toString());
-                    if (data.get(key).toString().equals("open")) {
-                        state = true;
-                    }
-                    for (int i = 0; i < Building.getInstance().nodes.size(); i++) {
-                        Building.getInstance().nodes.get(0).state = state;
-                    }
+            mFirehoseWebSocket.add(new FirehoseWebSocket(client, mAccessToken, Building.getInstance().nodes.get(serverNodeIndex).did, null, null, userID, new ArtikCloudWebSocketCallback() {
+                final int currentIndex = serverNodeIndex;
+                @Override
+                public void onOpen(int httpStatus, String httpStatusMessage) {
+                    Log.d("WebSocketOpen", httpStatusMessage);
                 }
 
-                // DB에 업로드
-                databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
-
-                runOnUiThread(new Runnable(){
-                    @Override
-                    public void run() {
-                        drawNodes();
+                @Override
+                public void onMessage(MessageOut messageOut) {
+                    Map<String, Object> data = messageOut.getData();
+                    for (String key : data.keySet()) {
+                        boolean state = false;
+                        Log.d("WebSocketMsg", data.get(key).toString() + ", " + Integer.toString(currentIndex));
+                        if (data.get(key).toString().equals("open")) {
+                            state = true;
+                        }
+                        Building.getInstance().nodes.get(currentIndex).state = state;
                     }
-                });
-            }
 
-            @Override
-            public void onAction(ActionOut action) {
-            }
+                    // DB에 업로드
+                    databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
 
-            @Override
-            public void onAck(Acknowledgement ack) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            drawNodes();
+                        }
+                    });
+                }
 
-            }
+                @Override
+                public void onAction(ActionOut action) {
+                }
 
-            @Override
-            public void onClose(int code, String reason, boolean remote) {
-            }
+                @Override
+                public void onAck(Acknowledgement ack) {
 
-            @Override
-            public void onError(WebSocketError error) {
-                Log.d("WebSocketError", error.toString());
-            }
+                }
 
-            @Override
-            public void onPing(long timestamp) {
-                Log.d("WebSocketPing", "PING");
-            }
-        });
-        mFirehoseWebSocket.connect();
+                @Override
+                public void onClose(int code, String reason, boolean remote) {
+                }
+
+                @Override
+                public void onError(WebSocketError error) {
+                    Log.d("WebSocketError", error.toString());
+                }
+
+                @Override
+                public void onPing(long timestamp) {
+                    Log.d("WebSocketPing", "PING");
+                }
+            }));
+            mFirehoseWebSocket.get(serverNodeIndex).connect();
+        }
     }
-
-    /*
-    AsyncTask<String, String, String> draw = new AsyncTask<String, String, String>() {
-        @Override
-        protected String doInBackground(String... strings) {
-            while (!this.isCancelled()) {
-                try {
-                    Thread.sleep(3000);
-                    publishProgress("");
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            drawNodes();
-        }
-    };*/
 
     private void processFailure(final String context, ApiException exc) {
         String errorDetail = " onFailure with exception" + exc;
