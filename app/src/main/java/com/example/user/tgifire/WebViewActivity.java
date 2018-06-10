@@ -1,6 +1,5 @@
 package com.example.user.tgifire;
 
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -15,8 +14,6 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
-
-import java.io.File;
 
 public class WebViewActivity extends AppCompatActivity {
     private static final String ENTRY_URL = "file:///android_asset/www/index.html";

@@ -19,12 +19,8 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -198,7 +194,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                     items.add(new BuildingInfoItem(floorIndex));
 
                     StorageReference spaceReference = storageReference.child(Auth.getInstance().userID + "/floor" + Integer.toString(floorIndex + 1) + ".png");
-                    final long ONE_MEGABYTE = 1024 * 1024;
+                    final long ONE_MEGABYTE = 20 * 1024 * 1024;
                     spaceReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
                         final int index = floorIndex;
                         @Override

@@ -3,22 +3,17 @@ package com.example.user.tgifire;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.AsyncTask;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ListView;
@@ -280,7 +275,7 @@ public class UserMainActivity extends AppCompatActivity {
                 }
                 downloadCount = 0;
                 for (floorIndex = 0; floorIndex < Building.getInstance().floorNumber; floorIndex++) {
-                    final long ONE_MEGABYTE = 1024 * 1024;
+                    final long ONE_MEGABYTE = 20 * 1024 * 1024;
                     StorageReference spaceReference = storageReference.child(nearestID + "/floor" + Integer.toString(floorIndex + 1) + ".png");
                     spaceReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
                         final int index = floorIndex;
