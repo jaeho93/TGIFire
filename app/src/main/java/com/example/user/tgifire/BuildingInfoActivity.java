@@ -40,6 +40,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import cloud.artik.api.MessagesApi;
+import cloud.artik.api.UsersApi;
+import cloud.artik.client.ApiCallback;
+import cloud.artik.client.ApiClient;
+import cloud.artik.client.ApiException;
+import cloud.artik.model.UserEnvelope;
 
 public class BuildingInfoActivity extends AppCompatActivity implements RecyclerViewAdapter.RecyclerButtonClickListener{
     Context mContext = this;
@@ -65,6 +74,9 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_building_info);
 
+        //AuthStateDAL authStateDAL = new AuthStateDAL(this);
+        Auth.getInstance().mAccessToken = Auth.getInstance().mAuthStateDAL.readAuthState().getAccessToken();
+
         items = new ArrayList<BuildingInfoItem>() ;
 
         // 리스트뷰 참조
@@ -81,7 +93,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         listview.setAdapter(adapter);
 
         // items 로드.
-        loadItemsFromDB();
+        setupArtikCloudApi();
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelperCallback(adapter));
         itemTouchHelper.attachToRecyclerView(listview);
@@ -108,7 +120,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                 Building.getInstance().buildingName = editBuildingName.getText().toString();
                 Building.getInstance().floorNumber = adapter.getItemCount();
 
-                databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
+                databaseReference.child("BUILDING").child(Auth.getInstance().userID).setValue(Building.getInstance());
 
                 // 층별 사진 업로드
                 uploadCount = 0;
@@ -123,7 +135,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                     // 층별 사진 정보 저장
                     FloorPicture.getInstance().floorPicture.add(new BitmapDrawable(bitmap));
 
-                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(i + 1) + ".png");
+                    StorageReference spaceReference = storageReference.child(Auth.getInstance().userID + "/floor" + Integer.toString(i + 1) + ".png");
                     UploadTask uploadTask = spaceReference.putBytes(data);
 
                     uploadTask.addOnFailureListener(new OnFailureListener() {
@@ -153,7 +165,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         Building.getInstance().Initialize();
         FloorPicture.getInstance().Initialize();
 
-        databaseReference.child("BUILDING").child("bjp").addListenerForSingleValueEvent(new ValueEventListener() {
+        databaseReference.child("BUILDING").child(Auth.getInstance().userID).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.getValue(Building.class) != null) {
@@ -185,7 +197,7 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                 for (floorIndex = 0; floorIndex < Building.getInstance().floorNumber; floorIndex++) {
                     items.add(new BuildingInfoItem(floorIndex));
 
-                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(floorIndex + 1) + ".png");
+                    StorageReference spaceReference = storageReference.child(Auth.getInstance().userID + "/floor" + Integer.toString(floorIndex + 1) + ".png");
                     final long ONE_MEGABYTE = 1024 * 1024;
                     spaceReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
                         final int index = floorIndex;
@@ -276,4 +288,49 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
             adapter.notifyDataSetChanged();
         }
     }
+
+    private void setupArtikCloudApi() {
+        ApiClient mApiClient = new ApiClient();
+        mApiClient.setAccessToken(Auth.getInstance().mAccessToken);
+
+        Auth.getInstance().mUserApi = new UsersApi(mApiClient);
+        Auth.getInstance().mMessagesApi = new MessagesApi(mApiClient);
+
+        getUserInfo();
+    }
+
+    private void getUserInfo() {
+        try {
+            Auth.getInstance().mUserApi.getSelfAsync(new ApiCallback<UserEnvelope>() {
+                @Override
+                public void onFailure(ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
+                    processFailure("GetUserInfo", e);
+                }
+
+                @Override
+                public void onSuccess(UserEnvelope result, int statusCode, Map<String, List<String>> responseHeaders) {
+                    Auth.getInstance().userID = result.getData().getId();
+                    loadItemsFromDB();
+                }
+
+                @Override
+                public void onUploadProgress(long bytesWritten, long contentLength, boolean done) {
+
+                }
+
+                @Override
+                public void onDownloadProgress(long bytesRead, long contentLength, boolean done) {
+
+                }
+            });
+        } catch (ApiException exc) {
+            processFailure("GetUserInfo", exc);
+        }
+    }
+
+    private void processFailure(final String context, ApiException exc) {
+        String errorDetail = " onFailure with exception" + exc;
+        Log.w(context, errorDetail);
+        exc.printStackTrace();
+    };
 }

@@ -33,9 +33,6 @@ public class MainActivity extends AppCompatActivity {
     static final String TAG = "MainActivity";
     private Context mContext = this;
 
-    AuthorizationService mAuthorizationService;
-    AuthStateDAL mAuthStateDAL;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,8 +57,8 @@ public class MainActivity extends AppCompatActivity {
         span.setSpan(new ForegroundColorSpan(0xFFFF0000), 14, 15, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
         span.setSpan(new ForegroundColorSpan(0xFFFF0000), 24, 25, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
 
-        mAuthorizationService = new AuthorizationService(this);
-        mAuthStateDAL = new AuthStateDAL(this);
+        Auth.getInstance().mAuthorizationService = new AuthorizationService(this);
+        Auth.getInstance().mAuthStateDAL = new AuthStateDAL(this);
 
         Button buttonAdmin = findViewById(R.id.buttonAdmin);
         buttonAdmin.setOnClickListener(new View.OnClickListener(){
@@ -101,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
         CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
         CustomTabsIntent customTabsIntent = builder.build();
 
-        mAuthorizationService.performAuthorizationRequest(authorizationRequest, authorizationIntent, customTabsIntent);
+        Auth.getInstance().mAuthorizationService.performAuthorizationRequest(authorizationRequest, authorizationIntent, customTabsIntent);
     }
 
     @Override
@@ -145,12 +142,12 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "Received code = " + response.authorizationCode + "\n make another call to get token ...");
 
                 // File 2nd call to get the token
-                mAuthorizationService.performTokenRequest(response.createTokenExchangeRequest(), new AuthorizationService.TokenResponseCallback() {
+                Auth.getInstance().mAuthorizationService.performTokenRequest(response.createTokenExchangeRequest(), new AuthorizationService.TokenResponseCallback() {
                     @Override
                     public void onTokenRequestCompleted(@Nullable TokenResponse tokenResponse, @Nullable AuthorizationException exception) {
                         if (tokenResponse != null) {
                             authState.update(tokenResponse, exception);
-                            mAuthStateDAL.writeAuthState(authState); //store into persistent storage for use later
+                            Auth.getInstance().mAuthStateDAL.writeAuthState(authState); //store into persistent storage for use later
                             String text = String.format("Received token response [%s]", tokenResponse.jsonSerializeString());
                             Log.i(TAG, text);
                             startBuildingInfoActivity();

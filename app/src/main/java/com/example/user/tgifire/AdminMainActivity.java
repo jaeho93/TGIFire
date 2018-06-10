@@ -72,10 +72,6 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
 
     // Artik 관련
     int serverNodeIndex = 0;
-    private UsersApi mUserApi = null;
-    private MessagesApi mMessagesApi = null;
-    private String mAccessToken;
-    private String userID;
     private ArrayList<FirehoseWebSocket> mFirehoseWebSocket = new ArrayList<FirehoseWebSocket>();
 
     @Override
@@ -113,11 +109,16 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             }
         });
 
-        AuthStateDAL authStateDAL = new AuthStateDAL(this);
-        mAccessToken = authStateDAL.readAuthState().getAccessToken();
+        //AuthStateDAL authStateDAL = new AuthStateDAL(this);
+        //mAccessToken = authStateDAL.readAuthState().getAccessToken();
 
-        setupArtikCloudApi();
-        getUserInfo();
+        //setupArtikCloudApi();
+        //getUserInfo();
+        try {
+            connectFirehoseWebSocket();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     protected class MyView extends View {
@@ -162,7 +163,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                         // 노드 추가
                         Building.getInstance().nodes.add(new Node((int)x, (int)y, currentFloor, nodeName.getText().toString(), nodeDID.getText().toString(), false));
                         // DB에 업로드
-                        databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
+                        databaseReference.child("BUILDING").child(Auth.getInstance().userID).setValue(Building.getInstance());
 
                         dialog.dismiss();
 
@@ -260,7 +261,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                             public void onClick(View v) {
                                 Building.getInstance().nodes.remove((int) v.getTag());
                                 // DB에 업로드
-                                databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
+                                databaseReference.child("BUILDING").child(Auth.getInstance().userID).setValue(Building.getInstance());
 
                                 dialog.dismiss();
                                 drawNodes();
@@ -271,7 +272,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                                 Building.getInstance().nodes.get((int) v.getTag()).name = nodeName.getText().toString();
                                 Building.getInstance().nodes.get((int) v.getTag()).did = nodeDID.getText().toString();
                                 // DB에 업로드
-                                databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
+                                databaseReference.child("BUILDING").child(Auth.getInstance().userID).setValue(Building.getInstance());
 
                                 dialog.dismiss();
                             }
@@ -281,48 +282,6 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
 
                 mainView.addView(newNode); //지정된 뷰에 셋팅완료된 Button을 추가
             }
-        }
-    }
-
-    private void setupArtikCloudApi() {
-        ApiClient mApiClient = new ApiClient();
-        mApiClient.setAccessToken(mAccessToken);
-
-        mUserApi = new UsersApi(mApiClient);
-        mMessagesApi = new MessagesApi(mApiClient);
-    }
-
-    private void getUserInfo() {
-        try {
-            mUserApi.getSelfAsync(new ApiCallback<UserEnvelope>() {
-                @Override
-                public void onFailure(ApiException e, int statusCode, Map<String, List<String>> responseHeaders) {
-                    processFailure("GetUserInfo", e);
-                }
-
-                @Override
-                public void onSuccess(UserEnvelope result, int statusCode, Map<String, List<String>> responseHeaders) {
-                    userID = result.getData().getId();
-                    try {
-                        Log.d("GetUserInfo", userID.toString());
-                        connectFirehoseWebSocket();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                @Override
-                public void onUploadProgress(long bytesWritten, long contentLength, boolean done) {
-
-                }
-
-                @Override
-                public void onDownloadProgress(long bytesRead, long contentLength, boolean done) {
-
-                }
-            });
-        } catch (ApiException exc) {
-            processFailure("GetUserInfo", exc);
         }
     }
 
@@ -338,7 +297,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
         for (serverNodeIndex = 0; serverNodeIndex < Building.getInstance().nodes.size(); serverNodeIndex++) {
             Log.d("DEVICE ID", Building.getInstance().nodes.get(serverNodeIndex).did);
 
-            mFirehoseWebSocket.add(new FirehoseWebSocket(client, mAccessToken, Building.getInstance().nodes.get(serverNodeIndex).did, null, null, userID, new ArtikCloudWebSocketCallback() {
+            mFirehoseWebSocket.add(new FirehoseWebSocket(client, Auth.getInstance().mAccessToken, Building.getInstance().nodes.get(serverNodeIndex).did, null, null, Auth.getInstance().userID, new ArtikCloudWebSocketCallback() {
                 final int currentIndex = serverNodeIndex;
                 @Override
                 public void onOpen(int httpStatus, String httpStatusMessage) {
@@ -359,7 +318,7 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
                     }
 
                     // DB에 업로드
-                    databaseReference.child("BUILDING").child("bjp").setValue(Building.getInstance());
+                    databaseReference.child("BUILDING").child(Auth.getInstance().userID).setValue(Building.getInstance());
 
                     runOnUiThread(new Runnable() {
                         @Override
@@ -395,10 +354,4 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             mFirehoseWebSocket.get(serverNodeIndex).connect();
         }
     }
-
-    private void processFailure(final String context, ApiException exc) {
-        String errorDetail = " onFailure with exception" + exc;
-        Log.w(context, errorDetail);
-        exc.printStackTrace();
-    };
 }
