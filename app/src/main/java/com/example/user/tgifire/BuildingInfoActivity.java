@@ -150,6 +150,9 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
     }
 
     public void loadItemsFromDB() {
+        Building.getInstance().Initialize();
+        FloorPicture.getInstance().Initialize();
+
         databaseReference.child("BUILDING").child("bjp").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -180,12 +183,12 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
                 // 층별 사진 다운로드
                 downloadCount = 0;
                 for (floorIndex = 0; floorIndex < Building.getInstance().floorNumber; floorIndex++) {
-                    final int index = floorIndex;
-                    items.add(new BuildingInfoItem(index));
+                    items.add(new BuildingInfoItem(floorIndex));
 
-                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(index + 1) + ".png");
+                    StorageReference spaceReference = storageReference.child("bjp/floor" + Integer.toString(floorIndex + 1) + ".png");
                     final long ONE_MEGABYTE = 1024 * 1024;
                     spaceReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                        final int index = floorIndex;
                         @Override
                         public void onSuccess(byte[] bytes) {
                             items.get(index).setImageFloor(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));

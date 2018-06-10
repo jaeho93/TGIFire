@@ -19,6 +19,8 @@ public class FloorPicture {
         }
 
         return uniqueInstance;
-
+    }
+    public void Initialize() {
+        uniqueInstance = null;
     }
 }
