@@ -94,11 +94,6 @@ public class AdminMainActivity extends AppCompatActivity {//implements Navigatio
             }
         });
 
-        //AuthStateDAL authStateDAL = new AuthStateDAL(this);
-        //mAccessToken = authStateDAL.readAuthState().getAccessToken();
-
-        //setupArtikCloudApi();
-        //getUserInfo();
         try {
             connectFirehoseWebSocket();
         } catch (Exception e) {

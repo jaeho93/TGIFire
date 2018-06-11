@@ -226,7 +226,7 @@ public class UserMainActivity extends AppCompatActivity {
                     }
                 }
 
-                if (min_distance >= 1) {
+                if (min_distance >= 0.1) {
                     nearestID = "";
                 }
 
