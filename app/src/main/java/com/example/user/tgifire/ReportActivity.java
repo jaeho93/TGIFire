@@ -70,6 +70,10 @@ public class ReportActivity extends AppCompatActivity implements View.OnClickLis
         gallery = (Button)findViewById(R.id.gallery);
         submit = (Button)findViewById(R.id.submit);
 
+        camera.setTypeface(typeface);
+        gallery.setTypeface(typeface);
+        submit.setTypeface(typeface);
+
         reportWeb = (TextView)findViewById(R.id.linkToReport);
         reportWeb.setTypeface(typeface2);
         address = (EditText)findViewById(R.id.addressEdit);

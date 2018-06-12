@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -19,6 +20,7 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -70,6 +72,12 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_building_info);
 
+        TextView textView=(TextView)findViewById(R.id.textBuildingInfo);
+        Typeface typeface=Typeface.createFromAsset(getAssets(), "a아메리카노B.ttf");
+        textView.setTypeface(typeface);
+        textView = (TextView)findViewById(R.id.textBuildingName);
+        textView.setTypeface(typeface);
+
         //AuthStateDAL authStateDAL = new AuthStateDAL(this);
         Auth.getInstance().mAccessToken = Auth.getInstance().mAuthStateDAL.readAuthState().getAccessToken();
 
@@ -106,8 +114,11 @@ public class BuildingInfoActivity extends AppCompatActivity implements RecyclerV
             }
         });
 
+        buttonAddFloor.setTypeface(typeface);
+
         // 확인 버튼 클릭
         Button buttonSaveBuildingInfo = (Button) findViewById(R.id.buttonSaveBuildingInfo);
+        buttonSaveBuildingInfo.setTypeface(typeface);
         buttonSaveBuildingInfo.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
                 // 빌딩 정보 업로드
